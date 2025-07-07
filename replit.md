@@ -226,6 +226,8 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 07, 2025. Enhanced Terms of Service with company registration details, age requirements (18+), and prescription disclaimers
 - July 07, 2025. Updated consultation duration to 20 minutes and clarified cancellation policy (≥24h = refund, <24h = no refund)
 - July 07, 2025. Added governing law clause (England & Wales jurisdiction) and professional indemnity confirmation section
+- July 07, 2025. Enhanced booking confirmation email template with emergency service disclaimer and clinician responsibility notice
+- July 07, 2025. Updated email consultation duration from 30 to 20 minutes to match platform terms
 
 ## User Preferences
 

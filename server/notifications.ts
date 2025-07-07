@@ -78,9 +78,15 @@ function getBookingConfirmationEmail(details: BookingDetails, isDoctor: boolean)
         <h3 style="margin-top: 0; color: #0891b2;">Appointment Details</h3>
         <p><strong>Date:</strong> ${date}</p>
         <p><strong>Time:</strong> ${time}</p>
-        <p><strong>Duration:</strong> 30 minutes</p>
+        <p><strong>Duration:</strong> 20 minutes</p>
         ${!isDoctor ? `<p><strong>Reason:</strong> ${booking.reasonForConsultation}</p>` : ''}
         <p><strong>Meeting Link:</strong> <a href="${meetingUrl}" style="color: #0891b2;">${meetingUrl}</a></p>
+      </div>
+
+      <div style="background: #fef2f2; border: 2px solid #fca5a5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0; color: #dc2626; font-weight: bold;">Important: HerHealth Hub is not an emergency service.<br>
+        For urgent or life-threatening issues, call 999 or go to A&E.<br>
+        The clinician you have booked is solely responsible for the medical advice provided during your consultation.</p>
       </div>
       
       <p>${isDoctor ? 'Please be available 5 minutes before the scheduled time.' : 'We will send you a reminder 24 hours before your appointment.'}</p>
