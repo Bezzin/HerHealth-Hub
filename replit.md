@@ -208,6 +208,10 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 07, 2025. Implemented WebSocket real-time notifications for doctor dashboard using native ws package
 - July 07, 2025. Added instant toast notifications when new bookings arrive with patient name and appointment details
 - July 07, 2025. Created WebSocket server on /ws path with doctor registration system for targeted notifications
+- July 07, 2025. Implemented patient medical history upload system with drag-and-drop functionality
+- July 07, 2025. Added file validation (PDF/JPG/PNG, 5MB limit) and secure server-side storage in uploads/ directory
+- July 07, 2025. Created /profile page with medical document management and view/replace functionality
+- July 07, 2025. Extended User schema with medicalHistoryUrl field and added database operations for file storage
 
 ## User Preferences
 

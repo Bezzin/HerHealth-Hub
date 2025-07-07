@@ -2,6 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import Stripe from "stripe";
+import multer from "multer";
+import path from "path";
+import fs from "fs/promises";
 import { storage } from "./storage";
 import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema, insertFeedbackSchema } from "@shared/schema";
 import { sendBookingConfirmation, sendRescheduleConfirmation, sendCancellationConfirmation, sendFeedbackRequest } from "./notifications";
@@ -12,6 +15,37 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: async (req, file, cb) => {
+      const uploadDir = 'uploads/medical-history';
+      try {
+        await fs.mkdir(uploadDir, { recursive: true });
+        cb(null, uploadDir);
+      } catch (error) {
+        cb(error as Error, uploadDir);
+      }
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, `medical-history-${uniqueSuffix}${ext}`);
+    }
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, JPG, and PNG files are allowed.'));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -718,6 +752,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`📧 Notified doctor ${doctorId} of new booking ${bookingData.id}`);
     }
   };
+
+  // Create user endpoint (for testing)
+  app.post("/api/users", async (req, res) => {
+    try {
+      const { email, firstName, lastName, isDoctor } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ message: "User already exists" });
+      }
+      
+      const user = await storage.createUser({ 
+        email, 
+        firstName, 
+        lastName, 
+        isDoctor: isDoctor || false 
+      });
+      res.status(201).json(user);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error creating user: " + error.message });
+    }
+  });
+
+  // Medical history upload endpoint
+  app.post("/api/upload/history", upload.single('medicalHistory'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // For now, using hardcoded user ID. In real app, get from authentication
+      const userId = 4; // This would come from req.user.id or similar
+      
+      // Store relative path for the uploaded file
+      const filePath = `/uploads/medical-history/${req.file.filename}`;
+      
+      // Update user's medical history URL
+      const updatedUser = await storage.updateMedicalHistoryUrl(userId, filePath);
+      
+      res.json({
+        message: "Medical history uploaded successfully",
+        url: filePath,
+        filename: req.file.originalname,
+        size: req.file.size
+      });
+    } catch (error: any) {
+      // Handle multer errors
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: "File too large. Maximum size is 5MB." });
+      }
+      if (error.message.includes('Invalid file type')) {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      res.status(500).json({ message: "Error uploading file: " + error.message });
+    }
+  });
+
+  // Get user's medical history
+  app.get("/api/users/:id/medical-history", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({
+        medicalHistoryUrl: user.medicalHistoryUrl,
+        hasHistory: !!user.medicalHistoryUrl
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching medical history: " + error.message });
+    }
+  });
+
+  // Serve uploaded files (for development only)
+  app.get("/uploads/medical-history/:filename", async (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const filePath = path.join(process.cwd(), 'uploads', 'medical-history', filename);
+      
+      // Check if file exists
+      await fs.access(filePath);
+      
+      // Send the file
+      res.sendFile(filePath);
+    } catch (error) {
+      res.status(404).json({ message: "File not found" });
+    }
+  });
 
   // Attach notification function to app for use in routes
   (app as any).notifyDoctorOfNewBooking = notifyDoctorOfNewBooking;

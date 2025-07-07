@@ -1,5 +1,6 @@
 import { Heart, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { useState } from "react";
 
 export default function Header() {
@@ -17,15 +18,18 @@ export default function Header() {
           </div>
           
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#doctors" className="text-gray-600 hover:text-primary transition-colors">
-              Find Doctors
-            </a>
-            <a href="#how-it-works" className="text-gray-600 hover:text-primary transition-colors">
-              How it Works
-            </a>
-            <a href="#about" className="text-gray-600 hover:text-primary transition-colors">
-              About
-            </a>
+            <Link href="/my-bookings" className="text-gray-600 hover:text-primary transition-colors">
+              My Bookings
+            </Link>
+            <Link href="/profile" className="text-gray-600 hover:text-primary transition-colors">
+              Profile
+            </Link>
+            <Link href="/dashboard/doctor" className="text-gray-600 hover:text-primary transition-colors">
+              Doctor Dashboard
+            </Link>
+            <Link href="/admin" className="text-gray-600 hover:text-primary transition-colors">
+              Admin
+            </Link>
             <Button className="bg-primary text-white hover:bg-primary/90">
               Sign In
             </Button>

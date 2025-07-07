@@ -11,6 +11,7 @@ import Invite from "@/pages/invite";
 import Admin from "@/pages/admin";
 import DoctorDashboard from "@/pages/doctor-dashboard";
 import MyBookings from "@/pages/my-bookings";
+import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/dashboard/doctor" component={DoctorDashboard} />
       <Route path="/my-bookings" component={MyBookings} />
+      <Route path="/profile" component={Profile} />
       <Route path="/feedback/:bookingId" component={lazy(() => import("./pages/feedback"))} />
       <Route component={NotFound} />
     </Switch>

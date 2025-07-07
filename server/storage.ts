@@ -6,6 +6,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateStripeCustomerId(userId: number, stripeCustomerId: string): Promise<User>;
+  updateMedicalHistoryUrl(userId: number, url: string): Promise<User>;
 
   // Doctor operations
   getDoctorProfile(id: number): Promise<DoctorProfile | undefined>;
@@ -180,6 +181,7 @@ export class MemStorage implements IStorage {
       id,
       isDoctor: insertUser.isDoctor ?? false,
       stripeCustomerId: null,
+      medicalHistoryUrl: null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -191,6 +193,15 @@ export class MemStorage implements IStorage {
     if (!user) throw new Error("User not found");
     
     const updatedUser = { ...user, stripeCustomerId };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async updateMedicalHistoryUrl(userId: number, url: string): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    
+    const updatedUser = { ...user, medicalHistoryUrl: url };
     this.users.set(userId, updatedUser);
     return updatedUser;
   }
