@@ -1,4 +1,4 @@
-import { users, doctorProfiles, slots, bookings, type User, type InsertUser, type DoctorProfile, type InsertDoctorProfile, type Slot, type InsertSlot, type Booking, type InsertBooking } from "@shared/schema";
+import { users, doctorProfiles, slots, bookings, doctorInvites, type User, type InsertUser, type DoctorProfile, type InsertDoctorProfile, type Slot, type InsertSlot, type Booking, type InsertBooking, type DoctorInvite, type InsertDoctorInvite } from "@shared/schema";
 
 export interface IStorage {
   // User operations
@@ -28,6 +28,12 @@ export interface IStorage {
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBookingPayment(bookingId: number, paymentIntentId: string): Promise<Booking>;
   updateBookingStatus(bookingId: number, status: string): Promise<Booking>;
+
+  // Doctor invite operations
+  createDoctorInvite(invite: InsertDoctorInvite): Promise<DoctorInvite>;
+  getDoctorInviteByToken(token: string): Promise<DoctorInvite | undefined>;
+  markInviteAsUsed(inviteId: number): Promise<DoctorInvite>;
+  cleanupExpiredInvites(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -35,20 +41,24 @@ export class MemStorage implements IStorage {
   private doctorProfiles: Map<number, DoctorProfile>;
   private slots: Map<number, Slot>;
   private bookings: Map<number, Booking>;
+  private doctorInvites: Map<number, DoctorInvite>;
   private currentUserId: number;
   private currentDoctorId: number;
   private currentSlotId: number;
   private currentBookingId: number;
+  private currentInviteId: number;
 
   constructor() {
     this.users = new Map();
     this.doctorProfiles = new Map();
     this.slots = new Map();
     this.bookings = new Map();
+    this.doctorInvites = new Map();
     this.currentUserId = 1;
     this.currentDoctorId = 1;
     this.currentSlotId = 1;
     this.currentBookingId = 1;
+    this.currentInviteId = 1;
     
     // Seed with sample doctors and slots
     this.seedDoctors();
@@ -289,6 +299,49 @@ export class MemStorage implements IStorage {
     const updatedBooking = { ...booking, status };
     this.bookings.set(bookingId, updatedBooking);
     return updatedBooking;
+  }
+
+  // Doctor invite operations
+  async createDoctorInvite(insertInvite: InsertDoctorInvite): Promise<DoctorInvite> {
+    const invite: DoctorInvite = {
+      id: this.currentInviteId++,
+      email: insertInvite.email,
+      token: insertInvite.token,
+      isUsed: false,
+      expiresAt: insertInvite.expiresAt,
+      createdAt: new Date(),
+    };
+    this.doctorInvites.set(invite.id, invite);
+    return invite;
+  }
+
+  async getDoctorInviteByToken(token: string): Promise<DoctorInvite | undefined> {
+    const invites = Array.from(this.doctorInvites.values());
+    for (const invite of invites) {
+      if (invite.token === token && !invite.isUsed && invite.expiresAt > new Date()) {
+        return invite;
+      }
+    }
+    return undefined;
+  }
+
+  async markInviteAsUsed(inviteId: number): Promise<DoctorInvite> {
+    const invite = this.doctorInvites.get(inviteId);
+    if (!invite) throw new Error("Invite not found");
+    
+    const updatedInvite = { ...invite, isUsed: true };
+    this.doctorInvites.set(inviteId, updatedInvite);
+    return updatedInvite;
+  }
+
+  async cleanupExpiredInvites(): Promise<void> {
+    const now = new Date();
+    const entries = Array.from(this.doctorInvites.entries());
+    for (const [id, invite] of entries) {
+      if (invite.expiresAt < now) {
+        this.doctorInvites.delete(id);
+      }
+    }
   }
 }
 

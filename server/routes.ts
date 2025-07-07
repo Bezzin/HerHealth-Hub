@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { insertUserSchema, insertBookingSchema } from "@shared/schema";
+import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema } from "@shared/schema";
+import { randomBytes } from "crypto";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -173,6 +174,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(bookings);
     } catch (error: any) {
       res.status(500).json({ message: "Error fetching bookings: " + error.message });
+    }
+  });
+
+  // Create doctor invite
+  app.post("/api/doctor/invite", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Generate unique token
+      const token = randomBytes(32).toString('hex');
+      
+      // Set expiration to 7 days from now
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      const invite = await storage.createDoctorInvite({
+        email,
+        token,
+        expiresAt,
+      });
+
+      // In production, you'd send an email with the invite link
+      const inviteUrl = `${req.protocol}://${req.get('host')}/invite/${token}`;
+      
+      res.json({ 
+        message: "Invite created successfully",
+        inviteUrl, // For demo purposes, return the URL
+        token: token // For demo purposes
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error creating invite: " + error.message });
+    }
+  });
+
+  // Validate doctor invite token
+  app.get("/api/doctor/invite/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const invite = await storage.getDoctorInviteByToken(token);
+      
+      if (!invite) {
+        return res.status(404).json({ message: "Invalid or expired invite" });
+      }
+
+      res.json({ email: invite.email, token: invite.token });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error validating invite: " + error.message });
+    }
+  });
+
+  // Complete doctor onboarding
+  app.post("/api/doctor/onboard", async (req, res) => {
+    try {
+      const { token, firstName, lastName, specialty, qualifications, experience, bio, slots } = req.body;
+      
+      // Validate invite token
+      const invite = await storage.getDoctorInviteByToken(token);
+      if (!invite) {
+        return res.status(400).json({ message: "Invalid or expired invite" });
+      }
+
+      // Create user account for doctor
+      const user = await storage.createUser({
+        email: invite.email,
+        firstName,
+        lastName,
+        isDoctor: true,
+      });
+
+      // Create doctor profile
+      const doctorProfile = await storage.createDoctorProfile({
+        userId: user.id,
+        specialty,
+        qualifications,
+        experience,
+        bio: bio || `Experienced ${specialty} specialist providing expert care.`,
+      });
+
+      // Create initial availability slots
+      if (slots && Array.isArray(slots)) {
+        for (const slot of slots) {
+          await storage.createSlot({
+            doctorId: doctorProfile.id,
+            date: slot.date,
+            time: slot.time,
+            isAvailable: true,
+          });
+        }
+      }
+
+      // Mark invite as used
+      await storage.markInviteAsUsed(invite.id);
+
+      res.json({ 
+        message: "Doctor onboarding completed successfully",
+        doctorId: doctorProfile.id,
+        userId: user.id 
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error completing onboarding: " + error.message });
     }
   });
 

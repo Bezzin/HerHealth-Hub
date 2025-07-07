@@ -49,6 +49,15 @@ export const bookings = pgTable("bookings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const doctorInvites = pgTable("doctor_invites", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  isUsed: boolean("is_used").notNull().default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   firstName: true,
@@ -81,6 +90,12 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   reasonForConsultation: true,
 });
 
+export const insertDoctorInviteSchema = createInsertSchema(doctorInvites).pick({
+  email: true,
+  token: true,
+  expiresAt: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type DoctorProfile = typeof doctorProfiles.$inferSelect;
@@ -89,3 +104,5 @@ export type Slot = typeof slots.$inferSelect;
 export type InsertSlot = z.infer<typeof insertSlotSchema>;
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
+export type DoctorInvite = typeof doctorInvites.$inferSelect;
+export type InsertDoctorInvite = z.infer<typeof insertDoctorInviteSchema>;

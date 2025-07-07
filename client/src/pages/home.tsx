@@ -13,6 +13,17 @@ export default function Home() {
       <HowItWorks />
       <DoctorProfiles />
       <TrustIndicators />
+      
+      {/* Admin Link for Testing */}
+      <div className="text-center py-8">
+        <a 
+          href="/admin" 
+          className="text-sm text-gray-500 hover:text-primary underline"
+        >
+          Admin: Create Doctor Invites
+        </a>
+      </div>
+      
       <Footer />
     </div>
   );

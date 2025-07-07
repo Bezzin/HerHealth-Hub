@@ -119,9 +119,77 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - In-memory storage for development with easy database swap
 - Schema definitions shared between application layers
 
+## Data Flow
+
+### Booking Process
+1. **Browse doctors** → View profiles with ratings & qualifications
+2. **Select time slot** → Choose from next 7 days of availability
+3. **Fill patient details** → Name, email, consultation reason
+4. **Pay £55** → Secure Stripe payment with automated splitting
+5. **Get confirmation** → Email with Zoom meeting link
+6. **Video consultation** → 30-minute secure session
+
+### Doctor Onboarding Process
+1. **Admin creates invite** → Generate unique token via `/admin` page
+2. **Doctor receives link** → One-time invitation URL with 7-day expiry
+3. **Complete profile** → Personal info, qualifications, experience
+4. **Set availability** → Select initial time slots from next 7 days
+5. **Account creation** → User account + doctor profile + slots created
+6. **Revenue ready** → Ready for Stripe Connect integration
+
+### Revenue Splitting
+- **Total fee**: £55 per consultation
+- **Doctor receives**: £35 (63%)
+- **Platform fee**: £20 (37%)
+- **Automatic transfer** via Stripe Connect
+
+## Data Storage
+- **Users**: Email, name, role, Stripe customer ID
+- **Doctor Profiles**: Qualifications, experience, specialties, ratings, availability
+- **Slots**: Doctor linkage, date/time, availability status
+- **Bookings**: Patient/doctor linkage, appointment details, payment status, meeting URLs
+- **Doctor Invites**: Email, token, expiry, usage status
+
+## External Dependencies
+
+### Payment Processing
+- **Stripe API**: Payment processing, customer management, revenue splitting
+- **Stripe Elements**: Secure payment form components
+- **Stripe Connect**: Multi-party payment handling
+
+### Development Tools
+- **Drizzle ORM**: Database abstraction layer (configured for PostgreSQL)
+- **Zod**: Runtime type validation
+- **React Query**: Server state management
+- **Tailwind CSS**: Utility-first styling
+
+### UI Components
+- **Radix UI**: Accessible component primitives
+- **Lucide Icons**: Consistent icon library
+- **React Hook Form**: Form state management
+
+## Deployment Strategy
+
+### Environment Configuration
+- Environment-specific configuration via `.env` files
+- Stripe API keys for payment processing
+- Database connection strings
+- JWT secrets for authentication
+
+### Build Process
+- Vite for frontend bundling with TypeScript compilation
+- esbuild for backend bundling
+- Optimized production builds with code splitting
+
+### Database Migration
+- Drizzle ORM configured for PostgreSQL migration
+- In-memory storage for development with easy database swap
+- Schema definitions shared between application layers
+
 ## Changelog
 
 - July 07, 2025. Initial setup
+- July 07, 2025. Added doctor self-onboarding system with invite tokens, profile creation, and slot management
 
 ## User Preferences
 
