@@ -120,18 +120,25 @@ export default function Invite() {
 
   const onSubmit = async (data: OnboardingFormData) => {
     try {
-      const response = await apiRequest("POST", "/api/doctor/onboard", {
+      const response = await apiRequest("POST", "/api/doctor/complete", {
         ...data,
         token,
         slots: selectedSlots,
       });
+
+      const result = await response.json();
 
       toast({
         title: "Welcome to HerHealth Hub!",
         description: "Your doctor profile has been created successfully.",
       });
 
-      setIsCompleted(true);
+      // Redirect to doctor dashboard
+      if (result.redirectUrl) {
+        window.location.href = result.redirectUrl;
+      } else {
+        setIsCompleted(true);
+      }
     } catch (error: any) {
       toast({
         title: "Error",

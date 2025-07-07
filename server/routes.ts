@@ -229,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Complete doctor onboarding
-  app.post("/api/doctor/onboard", async (req, res) => {
+  app.post("/api/doctor/complete", async (req, res) => {
     try {
       const { token, firstName, lastName, specialty, qualifications, experience, bio, slots } = req.body;
       
@@ -274,7 +274,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         message: "Doctor onboarding completed successfully",
         doctorId: doctorProfile.id,
-        userId: user.id 
+        userId: user.id,
+        redirectUrl: "/dashboard/doctor"
       });
     } catch (error: any) {
       res.status(500).json({ message: "Error completing onboarding: " + error.message });

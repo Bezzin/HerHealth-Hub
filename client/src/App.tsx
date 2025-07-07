@@ -8,6 +8,7 @@ import Booking from "@/pages/booking";
 import Checkout from "@/pages/checkout";
 import Invite from "@/pages/invite";
 import Admin from "@/pages/admin";
+import DoctorDashboard from "@/pages/doctor-dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/invite/:token" component={Invite} />
       <Route path="/admin" component={Admin} />
+      <Route path="/dashboard/doctor" component={DoctorDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
