@@ -33,6 +33,7 @@ export interface IStorage {
   getBookingsNeedingReminders(): Promise<Booking[]>;
   rescheduleBooking(bookingId: number, newSlotId: number): Promise<Booking>;
   cancelBooking(bookingId: number): Promise<Booking>;
+  updateBookingSymptoms(bookingId: number, symptomData: string, symptomSummary: string): Promise<Booking>;
 
   // Doctor invite operations
   createDoctorInvite(invite: InsertDoctorInvite): Promise<DoctorInvite>;
@@ -301,6 +302,8 @@ export class MemStorage implements IStorage {
       paymentIntentId: null,
       meetingUrl: null,
       remindersSent: false,
+      symptomData: null,
+      symptomSummary: null,
       createdAt: new Date(),
     };
     this.bookings.set(id, booking);
@@ -494,6 +497,15 @@ export class MemStorage implements IStorage {
 
   async getFeedbacksByDoctor(doctorId: number): Promise<Feedback[]> {
     return Array.from(this.feedbacks.values()).filter(f => f.doctorId === doctorId);
+  }
+
+  async updateBookingSymptoms(bookingId: number, symptomData: string, symptomSummary: string): Promise<Booking> {
+    const booking = this.bookings.get(bookingId);
+    if (!booking) throw new Error("Booking not found");
+    
+    const updatedBooking = { ...booking, symptomData, symptomSummary };
+    this.bookings.set(bookingId, updatedBooking);
+    return updatedBooking;
   }
 
   async getDoctorAverageRating(doctorId: number): Promise<{ averageRating: number; totalFeedbacks: number }> {

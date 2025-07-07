@@ -6,6 +6,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import { storage } from "./storage";
+import { generateSymptomSummary } from "./ai-service";
 import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema, insertFeedbackSchema } from "@shared/schema";
 import { sendBookingConfirmation, sendRescheduleConfirmation, sendCancellationConfirmation, sendFeedbackRequest } from "./notifications";
 import { randomBytes } from "crypto";
@@ -843,6 +844,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendFile(filePath);
     } catch (error) {
       res.status(404).json({ message: "File not found" });
+    }
+  });
+
+  // Symptom questionnaire endpoint
+  app.post("/api/questionnaire", async (req, res) => {
+    try {
+      const { bookingId, answers } = req.body;
+      
+      if (!bookingId || !answers) {
+        return res.status(400).json({ message: "Booking ID and answers are required" });
+      }
+
+      // Validate booking exists
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Generate AI summary from questionnaire answers
+      const symptomSummary = await generateSymptomSummary(answers);
+      
+      // Store questionnaire data and AI summary
+      const updatedBooking = await storage.updateBookingSymptoms(
+        bookingId, 
+        JSON.stringify(answers), 
+        symptomSummary
+      );
+
+      res.json({
+        message: "Questionnaire submitted successfully",
+        booking: {
+          id: updatedBooking.id,
+          symptomSummary: updatedBooking.symptomSummary
+        }
+      });
+    } catch (error: any) {
+      console.error("Error processing questionnaire:", error);
+      res.status(500).json({ message: "Error processing questionnaire: " + error.message });
+    }
+  });
+
+  // Get booking symptom summary for doctors
+  app.get("/api/bookings/:id/symptoms", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      res.json({
+        symptomData: booking.symptomData ? JSON.parse(booking.symptomData) : null,
+        symptomSummary: booking.symptomSummary,
+        hasSymptoms: !!(booking.symptomData && booking.symptomSummary)
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching symptoms: " + error.message });
     }
   });
 

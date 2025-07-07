@@ -49,6 +49,8 @@ export const bookings = pgTable("bookings", {
   paymentIntentId: text("payment_intent_id"),
   meetingUrl: text("meeting_url"),
   remindersSent: boolean("reminders_sent").default(false),
+  symptomData: text("symptom_data"), // JSON string of questionnaire answers
+  symptomSummary: text("symptom_summary"), // AI-generated clinical summary
   createdAt: timestamp("created_at").defaultNow(),
 });
 

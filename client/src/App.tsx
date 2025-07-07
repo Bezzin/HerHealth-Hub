@@ -12,6 +12,7 @@ import Admin from "@/pages/admin";
 import DoctorDashboard from "@/pages/doctor-dashboard";
 import MyBookings from "@/pages/my-bookings";
 import Profile from "@/pages/profile";
+import Questionnaire from "@/pages/questionnaire";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/dashboard/doctor" component={DoctorDashboard} />
       <Route path="/my-bookings" component={MyBookings} />
       <Route path="/profile" component={Profile} />
+      <Route path="/questionnaire/:slotId" component={Questionnaire} />
       <Route path="/feedback/:bookingId" component={lazy(() => import("./pages/feedback"))} />
       <Route component={NotFound} />
     </Switch>

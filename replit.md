@@ -212,6 +212,10 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 07, 2025. Added file validation (PDF/JPG/PNG, 5MB limit) and secure server-side storage in uploads/ directory
 - July 07, 2025. Created /profile page with medical document management and view/replace functionality
 - July 07, 2025. Extended User schema with medicalHistoryUrl field and added database operations for file storage
+- July 07, 2025. Implemented AI-powered symptom questionnaire with 8 dynamic questions accessible at /questionnaire/:slotId
+- July 07, 2025. Integrated OpenAI API for generating 3-bullet clinical summaries from patient symptom data
+- July 07, 2025. Added symptom data storage in booking records with JSON questionnaire answers and AI-generated summaries
+- July 07, 2025. Created symptom summary component for doctors to review patient information before consultations
 
 ## User Preferences
 
