@@ -220,6 +220,9 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 07, 2025. Extended DoctorProfile schema with indemnityConfirmed boolean field and validation requirements
 - July 07, 2025. Enhanced admin panel to display green shield icon for doctors with confirmed indemnity coverage
 - July 07, 2025. Form validation prevents doctor onboarding without indemnity confirmation checkbox checked
+- July 07, 2025. Created comprehensive Terms of Service page with "Our Role" section clarifying platform liability
+- July 07, 2025. Built Privacy Policy page with data storage limitations and clinical records disclaimer  
+- July 07, 2025. Updated footer to link Terms (/terms) and Privacy Policy (/privacy) pages
 
 ## User Preferences
 

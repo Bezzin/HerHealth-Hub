@@ -13,6 +13,8 @@ import DoctorDashboard from "@/pages/doctor-dashboard";
 import MyBookings from "@/pages/my-bookings";
 import Profile from "@/pages/profile";
 import Questionnaire from "@/pages/questionnaire";
+import Terms from "@/pages/terms";
+import Privacy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -27,6 +29,8 @@ function Router() {
       <Route path="/my-bookings" component={MyBookings} />
       <Route path="/profile" component={Profile} />
       <Route path="/questionnaire/:slotId" component={Questionnaire} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
       <Route path="/feedback/:bookingId" component={lazy(() => import("./pages/feedback"))} />
       <Route component={NotFound} />
     </Switch>

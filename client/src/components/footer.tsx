@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Footer() {
   return (
@@ -29,8 +30,8 @@ export default function Footer() {
             <h5 className="font-semibold mb-4">Company</h5>
             <ul className="space-y-2 text-sm text-gray-400">
               <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
               <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
             </ul>
           </div>
