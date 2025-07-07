@@ -199,6 +199,179 @@ export async function sendReminderEmails(details: BookingDetails): Promise<void>
   }
 }
 
+// Send reschedule confirmation emails
+export async function sendRescheduleConfirmation(details: BookingDetails, oldDateTime: { date: string; time: string }): Promise<void> {
+  if (!resend) {
+    console.log('⚠️  Resend not configured - skipping reschedule confirmation emails');
+    return;
+  }
+
+  const { booking, doctor, patient } = details;
+  const meetingUrl = generateMeetingUrl(booking.id);
+  const { date: newDate, time: newTime } = formatDateTime(booking.appointmentDate.toString(), booking.appointmentTime);
+
+  try {
+    // Send to patient
+    const patientHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891b2;">HerHealth Hub - Appointment Rescheduled</h2>
+        
+        <p>Dear ${patient.firstName},</p>
+        
+        <p>Your appointment has been successfully rescheduled.</p>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #f59e0b;">
+          <h4 style="margin-top: 0; color: #d97706;">Previous Appointment</h4>
+          <p><strong>Date:</strong> ${oldDateTime.date}</p>
+          <p><strong>Time:</strong> ${oldDateTime.time}</p>
+        </div>
+        
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #0891b2;">New Appointment Details</h3>
+          <p><strong>Date:</strong> ${newDate}</p>
+          <p><strong>Time:</strong> ${newTime}</p>
+          <p><strong>Duration:</strong> 30 minutes</p>
+          <p><strong>Meeting Link:</strong> <a href="${meetingUrl}" style="color: #0891b2;">${meetingUrl}</a></p>
+        </div>
+        
+        <p>We will send you a reminder 24 hours before your new appointment time.</p>
+        
+        <p>If you need to make any further changes, please contact us at support@herhealth.com</p>
+        
+        <p>Best regards,<br>The HerHealth Hub Team</p>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: 'HerHealth Hub <bookings@herhealth.com>',
+      to: [patient.email],
+      subject: `Appointment Rescheduled - ${newDate} at ${newTime}`,
+      html: patientHtml,
+    });
+    console.log(`✅ Reschedule confirmation email sent to patient: ${patient.email}`);
+
+    // Send to doctor
+    const doctorHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891b2;">HerHealth Hub - Appointment Rescheduled</h2>
+        
+        <p>Dear Doctor,</p>
+        
+        <p>A patient has rescheduled their appointment with you.</p>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #f59e0b;">
+          <h4 style="margin-top: 0; color: #d97706;">Previous Appointment</h4>
+          <p><strong>Date:</strong> ${oldDateTime.date}</p>
+          <p><strong>Time:</strong> ${oldDateTime.time}</p>
+        </div>
+        
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #0891b2;">New Appointment Details</h3>
+          <p><strong>Patient:</strong> ${patient.firstName} ${patient.lastName}</p>
+          <p><strong>Date:</strong> ${newDate}</p>
+          <p><strong>Time:</strong> ${newTime}</p>
+          <p><strong>Meeting Link:</strong> <a href="${meetingUrl}" style="color: #0891b2;">${meetingUrl}</a></p>
+        </div>
+        
+        <p>Please update your schedule accordingly.</p>
+        
+        <p>Best regards,<br>The HerHealth Hub Team</p>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: 'HerHealth Hub <bookings@herhealth.com>',
+      to: ['doctor@example.com'], // In real app, use doctor's email
+      subject: `Patient Rescheduled: ${patient.firstName} ${patient.lastName} - ${newDate} at ${newTime}`,
+      html: doctorHtml,
+    });
+    console.log(`✅ Reschedule notification email sent to doctor for booking #${booking.id}`);
+
+  } catch (error) {
+    console.error('❌ Error sending reschedule confirmation emails:', error);
+  }
+}
+
+// Send cancellation confirmation emails
+export async function sendCancellationConfirmation(details: BookingDetails): Promise<void> {
+  if (!resend) {
+    console.log('⚠️  Resend not configured - skipping cancellation confirmation emails');
+    return;
+  }
+
+  const { booking, doctor, patient } = details;
+  const { date, time } = formatDateTime(booking.appointmentDate.toString(), booking.appointmentTime);
+
+  try {
+    // Send to patient
+    const patientHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891b2;">HerHealth Hub - Appointment Cancelled</h2>
+        
+        <p>Dear ${patient.firstName},</p>
+        
+        <p>Your appointment has been successfully cancelled.</p>
+        
+        <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+          <h3 style="margin-top: 0; color: #dc2626;">Cancelled Appointment</h3>
+          <p><strong>Date:</strong> ${date}</p>
+          <p><strong>Time:</strong> ${time}</p>
+          <p><strong>Doctor:</strong> Dr. ${doctor.qualifications}</p>
+        </div>
+        
+        <p>Your payment will be refunded within 3-5 business days.</p>
+        
+        <p>If you need to book a new appointment, please visit our website or contact us at support@herhealth.com</p>
+        
+        <p>We hope to see you again soon.</p>
+        
+        <p>Best regards,<br>The HerHealth Hub Team</p>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: 'HerHealth Hub <bookings@herhealth.com>',
+      to: [patient.email],
+      subject: `Appointment Cancelled - ${date} at ${time}`,
+      html: patientHtml,
+    });
+    console.log(`✅ Cancellation confirmation email sent to patient: ${patient.email}`);
+
+    // Send to doctor
+    const doctorHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891b2;">HerHealth Hub - Appointment Cancelled</h2>
+        
+        <p>Dear Doctor,</p>
+        
+        <p>A patient has cancelled their appointment with you.</p>
+        
+        <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+          <h3 style="margin-top: 0; color: #dc2626;">Cancelled Appointment</h3>
+          <p><strong>Patient:</strong> ${patient.firstName} ${patient.lastName}</p>
+          <p><strong>Date:</strong> ${date}</p>
+          <p><strong>Time:</strong> ${time}</p>
+        </div>
+        
+        <p>This time slot is now available for other patients to book.</p>
+        
+        <p>Best regards,<br>The HerHealth Hub Team</p>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: 'HerHealth Hub <bookings@herhealth.com>',
+      to: ['doctor@example.com'], // In real app, use doctor's email
+      subject: `Appointment Cancelled: ${patient.firstName} ${patient.lastName} - ${date} at ${time}`,
+      html: doctorHtml,
+    });
+    console.log(`✅ Cancellation notification email sent to doctor for booking #${booking.id}`);
+
+  } catch (error) {
+    console.error('❌ Error sending cancellation confirmation emails:', error);
+  }
+}
+
 // Send SMS reminder to patient
 export async function sendSMSReminder(details: BookingDetails, phoneNumber?: string): Promise<void> {
   if (!twilioClient || !process.env.TWILIO_PHONE_NUMBER) {

@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema } from "@shared/schema";
-import { sendBookingConfirmation } from "./notifications";
+import { sendBookingConfirmation, sendRescheduleConfirmation, sendCancellationConfirmation } from "./notifications";
 import { randomBytes } from "crypto";
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -361,6 +361,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       res.status(500).json({ message: "Error checking reminders: " + error.message });
+    }
+  });
+
+  // Reschedule booking
+  app.put("/api/bookings/:id/reschedule", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const { newSlotId } = req.body;
+
+      if (!newSlotId) {
+        return res.status(400).json({ message: "New slot ID is required" });
+      }
+
+      // Get original booking details for email
+      const originalBooking = await storage.getBooking(bookingId);
+      if (!originalBooking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      const oldDateTime = {
+        date: new Date(originalBooking.appointmentDate).toLocaleDateString('en-GB', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        time: originalBooking.appointmentTime
+      };
+
+      // Reschedule the booking
+      const updatedBooking = await storage.rescheduleBooking(bookingId, newSlotId);
+
+      // Send confirmation emails
+      try {
+        const doctor = await storage.getDoctorProfile(updatedBooking.doctorId);
+        const patient = await storage.getUser(updatedBooking.patientId);
+        
+        if (doctor && patient) {
+          await sendRescheduleConfirmation({ booking: updatedBooking, doctor, patient }, oldDateTime);
+        }
+      } catch (notificationError) {
+        console.error("Error sending reschedule confirmation:", notificationError);
+        // Don't fail the request if email sending fails
+      }
+
+      res.json(updatedBooking);
+    } catch (error: any) {
+      res.status(400).json({ message: "Error rescheduling booking: " + error.message });
+    }
+  });
+
+  // Cancel booking
+  app.put("/api/bookings/:id/cancel", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+
+      // Get booking details for email before cancellation
+      const originalBooking = await storage.getBooking(bookingId);
+      if (!originalBooking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Cancel the booking
+      const cancelledBooking = await storage.cancelBooking(bookingId);
+
+      // Send confirmation emails
+      try {
+        const doctor = await storage.getDoctorProfile(cancelledBooking.doctorId);
+        const patient = await storage.getUser(cancelledBooking.patientId);
+        
+        if (doctor && patient) {
+          await sendCancellationConfirmation({ booking: cancelledBooking, doctor, patient });
+        }
+      } catch (notificationError) {
+        console.error("Error sending cancellation confirmation:", notificationError);
+        // Don't fail the request if email sending fails
+      }
+
+      res.json(cancelledBooking);
+    } catch (error: any) {
+      res.status(400).json({ message: "Error cancelling booking: " + error.message });
     }
   });
 

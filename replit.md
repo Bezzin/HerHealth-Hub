@@ -195,6 +195,8 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 07, 2025. Added development mode simulation for Stripe Connect testing without platform approval
 - July 07, 2025. Integrated comprehensive notification system with email (Resend) and SMS (Twilio) for booking confirmations and 24h reminders
 - July 07, 2025. Added phone number field to booking schema and cron scheduler for automated reminder delivery
+- July 07, 2025. Implemented complete reschedule/cancel flow with 24-hour advance notice requirement and automatic slot availability updates
+- July 07, 2025. Added My Bookings page with UI for patient booking management and confirmation email integration
 
 ## User Preferences
 

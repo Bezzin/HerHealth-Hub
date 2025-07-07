@@ -30,6 +30,8 @@ export interface IStorage {
   updateBookingStatus(bookingId: number, status: string): Promise<Booking>;
   markRemindersSent(bookingId: number): Promise<Booking>;
   getBookingsNeedingReminders(): Promise<Booking[]>;
+  rescheduleBooking(bookingId: number, newSlotId: number): Promise<Booking>;
+  cancelBooking(bookingId: number): Promise<Booking>;
 
   // Doctor invite operations
   createDoctorInvite(invite: InsertDoctorInvite): Promise<DoctorInvite>;
@@ -375,6 +377,73 @@ export class MemStorage implements IStorage {
       // Send reminders for bookings that are 24±1 hours away
       return timeDiff >= twentyThreeHours && timeDiff <= twentyFiveHours;
     });
+  }
+
+  async rescheduleBooking(bookingId: number, newSlotId: number): Promise<Booking> {
+    const booking = this.bookings.get(bookingId);
+    if (!booking) {
+      throw new Error(`Booking with id ${bookingId} not found`);
+    }
+
+    // Check if booking can be rescheduled (24h in advance)
+    const now = new Date();
+    const appointmentTime = new Date(booking.appointmentDate);
+    const timeDiff = appointmentTime.getTime() - now.getTime();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+
+    if (timeDiff < twentyFourHours) {
+      throw new Error('Bookings can only be rescheduled 24 hours in advance');
+    }
+
+    // Verify new slot exists and is available
+    const newSlot = await this.getSlot(newSlotId);
+    if (!newSlot || !newSlot.isAvailable) {
+      throw new Error('Selected time slot is not available');
+    }
+
+    // Release the old slot
+    await this.updateSlotAvailability(booking.slotId, true);
+
+    // Reserve the new slot
+    await this.updateSlotAvailability(newSlotId, false);
+
+    // Update booking with new slot details
+    const newAppointmentDate = new Date(`${newSlot.date}T${newSlot.time}:00`);
+    const updatedBooking = {
+      ...booking,
+      slotId: newSlotId,
+      appointmentDate: newAppointmentDate,
+      appointmentTime: newSlot.time,
+      remindersSent: false, // Reset reminder status for new appointment time
+    };
+
+    this.bookings.set(bookingId, updatedBooking);
+    return updatedBooking;
+  }
+
+  async cancelBooking(bookingId: number): Promise<Booking> {
+    const booking = this.bookings.get(bookingId);
+    if (!booking) {
+      throw new Error(`Booking with id ${bookingId} not found`);
+    }
+
+    // Check if booking can be cancelled (24h in advance)
+    const now = new Date();
+    const appointmentTime = new Date(booking.appointmentDate);
+    const timeDiff = appointmentTime.getTime() - now.getTime();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+
+    if (timeDiff < twentyFourHours) {
+      throw new Error('Bookings can only be cancelled 24 hours in advance');
+    }
+
+    // Release the slot
+    await this.updateSlotAvailability(booking.slotId, true);
+
+    // Update booking status
+    const cancelledBooking = { ...booking, status: 'cancelled' };
+    this.bookings.set(bookingId, cancelledBooking);
+    return cancelledBooking;
   }
 }
 
