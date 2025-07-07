@@ -16,7 +16,7 @@ export default function Terms() {
             Back
           </Button>
           <h1 className="text-3xl font-bold text-gray-900">Terms of Service</h1>
-          <p className="text-gray-600 mt-2">Last updated: July 7, 2025</p>
+          <p className="text-gray-600 mt-2">Last updated: {new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
 
         <div className="space-y-6">
@@ -39,6 +39,9 @@ export default function Terms() {
               <p className="text-gray-700 mb-4">
                 HerHealth Hub is a healthcare booking platform that connects patients with qualified healthcare professionals for video consultations. We facilitate appointments but do not provide medical services directly.
               </p>
+              <p className="text-gray-700 mb-4">
+                HerHealth Hub is registered in England & Wales, No. XXXXXXX, trading as Sunscapes Media Ltd.
+              </p>
               <p className="text-gray-700">
                 All medical consultations are conducted by independent healthcare professionals who are responsible for their own clinical decisions and maintain their own professional indemnity insurance.
               </p>
@@ -53,6 +56,7 @@ export default function Terms() {
               <div className="space-y-3">
                 <p className="text-gray-700">As a user of our platform, you agree to:</p>
                 <ul className="list-disc pl-6 space-y-2 text-gray-700">
+                  <li>Be 18 years or older (or have guardian present)</li>
                   <li>Provide accurate and truthful information during registration and consultations</li>
                   <li>Attend scheduled appointments on time or cancel with appropriate notice</li>
                   <li>Pay consultation fees as agreed</li>
@@ -70,10 +74,10 @@ export default function Terms() {
             <CardContent>
               <div className="space-y-3">
                 <p className="text-gray-700">
-                  Consultation fees are £55 per 30-minute session. Payment is required at the time of booking through our secure payment system powered by Stripe.
+                  Consultation fees are £55 per 20-minute session. Payment is required at the time of booking through our secure payment system powered by Stripe.
                 </p>
                 <p className="text-gray-700">
-                  Cancellations made more than 24 hours before the scheduled appointment are eligible for a full refund. Cancellations made within 24 hours may be subject to fees.
+                  Cancellations ≥24 hours before start = full refund; cancellations &lt;24 hours = no refund.
                 </p>
               </div>
             </CardContent>
@@ -87,6 +91,9 @@ export default function Terms() {
               <div className="space-y-3">
                 <p className="text-gray-700">
                   The healthcare professionals using our platform are independent practitioners responsible for their own clinical decisions. HerHealth Hub does not provide medical advice or treatment.
+                </p>
+                <p className="text-gray-700">
+                  Clinicians may issue private prescriptions at their own discretion; HerHealth Hub is not a pharmacy and does not dispense medication.
                 </p>
                 <p className="text-gray-700">
                   In case of medical emergencies, contact emergency services (999 in the UK) immediately. Our platform is not suitable for urgent or emergency medical situations.
@@ -122,15 +129,31 @@ export default function Terms() {
               <CardTitle>8. Limitation of Liability</CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="space-y-3">
+                <p className="text-gray-700">
+                  HerHealth Hub's liability is limited to facilitating connections between patients and healthcare professionals. We are not liable for the quality, accuracy, or outcomes of medical consultations provided by independent practitioners.
+                </p>
+                <p className="text-gray-700">
+                  These Terms are governed by the laws of England and Wales, and disputes are subject to the exclusive jurisdiction of its courts.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>9. Professional Indemnity Confirmation</CardTitle>
+            </CardHeader>
+            <CardContent>
               <p className="text-gray-700">
-                HerHealth Hub's liability is limited to facilitating connections between patients and healthcare professionals. We are not liable for the quality, accuracy, or outcomes of medical consultations provided by independent practitioners.
+                All clinicians confirm that their professional indemnity insurance covers private tele-consultations performed via the platform.
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>9. Contact Information</CardTitle>
+              <CardTitle>10. Contact Information</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700">
