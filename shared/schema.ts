@@ -60,6 +60,17 @@ export const doctorInvites = pgTable("doctor_invites", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const feedbacks = pgTable("feedbacks", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull().references(() => bookings.id),
+  doctorId: integer("doctor_id").notNull().references(() => doctorProfiles.id),
+  patientId: integer("patient_id").notNull().references(() => users.id),
+  rating: integer("rating").notNull(), // 1-5 stars
+  comment: text("comment"),
+  isAnonymous: boolean("is_anonymous").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   firstName: true,
@@ -99,6 +110,15 @@ export const insertDoctorInviteSchema = createInsertSchema(doctorInvites).pick({
   expiresAt: true,
 });
 
+export const insertFeedbackSchema = createInsertSchema(feedbacks).pick({
+  bookingId: true,
+  doctorId: true,
+  patientId: true,
+  rating: true,
+  comment: true,
+  isAnonymous: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type DoctorProfile = typeof doctorProfiles.$inferSelect;
@@ -109,3 +129,5 @@ export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type DoctorInvite = typeof doctorInvites.$inferSelect;
 export type InsertDoctorInvite = z.infer<typeof insertDoctorInviteSchema>;
+export type Feedback = typeof feedbacks.$inferSelect;
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;

@@ -1,4 +1,4 @@
-import { users, doctorProfiles, slots, bookings, doctorInvites, type User, type InsertUser, type DoctorProfile, type InsertDoctorProfile, type Slot, type InsertSlot, type Booking, type InsertBooking, type DoctorInvite, type InsertDoctorInvite } from "@shared/schema";
+import { users, doctorProfiles, slots, bookings, doctorInvites, feedbacks, type User, type InsertUser, type DoctorProfile, type InsertDoctorProfile, type Slot, type InsertSlot, type Booking, type InsertBooking, type DoctorInvite, type InsertDoctorInvite, type Feedback, type InsertFeedback } from "@shared/schema";
 
 export interface IStorage {
   // User operations
@@ -38,6 +38,13 @@ export interface IStorage {
   getDoctorInviteByToken(token: string): Promise<DoctorInvite | undefined>;
   markInviteAsUsed(inviteId: number): Promise<DoctorInvite>;
   cleanupExpiredInvites(): Promise<void>;
+
+  // Feedback operations
+  createFeedback(feedback: InsertFeedback): Promise<Feedback>;
+  getFeedback(id: number): Promise<Feedback | undefined>;
+  getFeedbackByBooking(bookingId: number): Promise<Feedback | undefined>;
+  getFeedbacksByDoctor(doctorId: number): Promise<Feedback[]>;
+  getDoctorAverageRating(doctorId: number): Promise<{ averageRating: number; totalFeedbacks: number }>;
 }
 
 export class MemStorage implements IStorage {
@@ -46,11 +53,13 @@ export class MemStorage implements IStorage {
   private slots: Map<number, Slot>;
   private bookings: Map<number, Booking>;
   private doctorInvites: Map<number, DoctorInvite>;
+  private feedbacks: Map<number, Feedback>;
   private currentUserId: number;
   private currentDoctorId: number;
   private currentSlotId: number;
   private currentBookingId: number;
   private currentInviteId: number;
+  private currentFeedbackId: number;
 
   constructor() {
     this.users = new Map();
@@ -58,11 +67,13 @@ export class MemStorage implements IStorage {
     this.slots = new Map();
     this.bookings = new Map();
     this.doctorInvites = new Map();
+    this.feedbacks = new Map();
     this.currentUserId = 1;
     this.currentDoctorId = 1;
     this.currentSlotId = 1;
     this.currentBookingId = 1;
     this.currentInviteId = 1;
+    this.currentFeedbackId = 1;
     
     // Seed with sample doctors and slots
     this.seedDoctors();
@@ -444,6 +455,47 @@ export class MemStorage implements IStorage {
     const cancelledBooking = { ...booking, status: 'cancelled' };
     this.bookings.set(bookingId, cancelledBooking);
     return cancelledBooking;
+  }
+
+  async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
+    const feedback: Feedback = {
+      id: this.currentFeedbackId++,
+      bookingId: insertFeedback.bookingId,
+      doctorId: insertFeedback.doctorId,
+      patientId: insertFeedback.patientId,
+      rating: insertFeedback.rating,
+      comment: insertFeedback.comment || null,
+      isAnonymous: insertFeedback.isAnonymous || null,
+      createdAt: new Date(),
+    };
+    
+    this.feedbacks.set(feedback.id, feedback);
+    return feedback;
+  }
+
+  async getFeedback(id: number): Promise<Feedback | undefined> {
+    return this.feedbacks.get(id);
+  }
+
+  async getFeedbackByBooking(bookingId: number): Promise<Feedback | undefined> {
+    return Array.from(this.feedbacks.values()).find(f => f.bookingId === bookingId);
+  }
+
+  async getFeedbacksByDoctor(doctorId: number): Promise<Feedback[]> {
+    return Array.from(this.feedbacks.values()).filter(f => f.doctorId === doctorId);
+  }
+
+  async getDoctorAverageRating(doctorId: number): Promise<{ averageRating: number; totalFeedbacks: number }> {
+    const doctorFeedbacks = await this.getFeedbacksByDoctor(doctorId);
+    
+    if (doctorFeedbacks.length === 0) {
+      return { averageRating: 0, totalFeedbacks: 0 };
+    }
+
+    const totalRating = doctorFeedbacks.reduce((sum, feedback) => sum + feedback.rating, 0);
+    const averageRating = Math.round((totalRating / doctorFeedbacks.length) * 10) / 10; // Round to 1 decimal
+
+    return { averageRating, totalFeedbacks: doctorFeedbacks.length };
   }
 }
 

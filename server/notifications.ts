@@ -373,6 +373,63 @@ export async function sendCancellationConfirmation(details: BookingDetails): Pro
 }
 
 // Send SMS reminder to patient
+// Send post-consultation feedback email
+export async function sendFeedbackRequest(details: BookingDetails): Promise<void> {
+  if (!resend) {
+    console.log('⚠️  Resend not configured - skipping feedback request email');
+    return;
+  }
+
+  const { booking, doctor, patient } = details;
+  const feedbackUrl = `${process.env.APP_URL || 'http://localhost:5000'}/feedback/${booking.id}`;
+  const { date, time } = formatDateTime(booking.appointmentDate.toString(), booking.appointmentTime);
+
+  try {
+    const patientHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891b2;">Thank you for choosing HerHealth Hub!</h2>
+        
+        <p>Dear ${patient.firstName},</p>
+        
+        <p>We hope your consultation was helpful and informative. Your feedback helps us improve our service and helps other women find the right specialist for their needs.</p>
+        
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #0891b2;">Your Recent Consultation</h3>
+          <p><strong>Date:</strong> ${date}</p>
+          <p><strong>Time:</strong> ${time}</p>
+          <p><strong>Doctor:</strong> Dr. ${doctor.qualifications}</p>
+          <p><strong>Specialty:</strong> ${doctor.specialty}</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${feedbackUrl}" style="background-color: #0891b2; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+            Share Your Experience
+          </a>
+        </div>
+        
+        <p style="font-size: 14px; color: #666;">
+          Your feedback is completely confidential and will be used to help other patients make informed decisions about their healthcare.
+        </p>
+        
+        <p>If you have any concerns about your consultation, please don't hesitate to contact us at support@herhealth.com</p>
+        
+        <p>Best regards,<br>The HerHealth Hub Team</p>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: 'HerHealth Hub <feedback@herhealth.com>',
+      to: [patient.email],
+      subject: 'How was your consultation? Share your experience',
+      html: patientHtml,
+    });
+    console.log(`✅ Feedback request email sent to patient: ${patient.email}`);
+
+  } catch (error) {
+    console.error('❌ Error sending feedback request email:', error);
+  }
+}
+
 export async function sendSMSReminder(details: BookingDetails, phoneNumber?: string): Promise<void> {
   if (!twilioClient || !process.env.TWILIO_PHONE_NUMBER) {
     console.log('⚠️  Twilio not configured - skipping SMS reminder');

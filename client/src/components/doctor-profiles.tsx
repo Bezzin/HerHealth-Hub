@@ -5,6 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import type { DoctorProfile } from "@shared/schema";
 
+interface DoctorWithRating extends DoctorProfile {
+  averageRating?: number;
+  totalFeedbacks?: number;
+}
+
 export default function DoctorProfiles() {
   const [, setLocation] = useLocation();
   
@@ -12,7 +17,30 @@ export default function DoctorProfiles() {
     queryKey: ["/api/doctors"],
   });
 
-  if (isLoading) {
+  // Fetch ratings for all doctors
+  const { data: doctorsWithRatings, isLoading: isLoadingRatings } = useQuery<DoctorWithRating[]>({
+    queryKey: ["/api/doctors", "with-ratings"],
+    queryFn: async () => {
+      if (!doctors) return [];
+      
+      const doctorsWithRatings = await Promise.all(
+        doctors.map(async (doctor) => {
+          try {
+            const response = await fetch(`/api/doctors/${doctor.id}/rating`);
+            const rating = await response.json();
+            return { ...doctor, ...rating };
+          } catch (error) {
+            console.error(`Error fetching rating for doctor ${doctor.id}:`, error);
+            return { ...doctor, averageRating: 0, totalFeedbacks: 0 };
+          }
+        })
+      );
+      return doctorsWithRatings;
+    },
+    enabled: !!doctors,
+  });
+
+  if (isLoading || isLoadingRatings) {
     return (
       <section id="doctors" className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -57,7 +85,7 @@ export default function DoctorProfiles() {
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {doctors?.map((doctor) => (
+          {doctorsWithRatings?.map((doctor) => (
             <Card key={doctor.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4 mb-4">
@@ -81,14 +109,19 @@ export default function DoctorProfiles() {
                     <span className="text-sm text-gray-600">{doctor.experience}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Star className="text-accent" size={16} />
-                    <span className="text-sm text-gray-600">{doctor.rating} ({doctor.reviewCount} reviews)</span>
+                    <Star className="text-yellow-400 fill-yellow-400" size={16} />
+                    <span className="text-sm text-gray-600">
+                      {doctor.averageRating && doctor.averageRating > 0 
+                        ? `${doctor.averageRating} (${doctor.totalFeedbacks} review${doctor.totalFeedbacks !== 1 ? 's' : ''})`
+                        : 'No reviews yet'
+                      }
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-secondary rounded-full"></div>
-                    <span className="text-sm text-gray-600">{doctor.availability}</span>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-sm text-gray-600">Available this week</span>
                   </div>
                   <Button 
                     className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"

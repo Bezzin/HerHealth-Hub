@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema } from "@shared/schema";
-import { sendBookingConfirmation, sendRescheduleConfirmation, sendCancellationConfirmation } from "./notifications";
+import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema, insertFeedbackSchema } from "@shared/schema";
+import { sendBookingConfirmation, sendRescheduleConfirmation, sendCancellationConfirmation, sendFeedbackRequest } from "./notifications";
 import { randomBytes } from "crypto";
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -442,6 +442,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(cancelledBooking);
     } catch (error: any) {
       res.status(400).json({ message: "Error cancelling booking: " + error.message });
+    }
+  });
+
+  // Mark booking as completed and trigger feedback request
+  app.put("/api/bookings/:id/complete", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      
+      // Update booking status to completed
+      const completedBooking = await storage.updateBookingStatus(bookingId, "completed");
+      
+      // Send feedback request email
+      try {
+        const doctor = await storage.getDoctorProfile(completedBooking.doctorId);
+        const patient = await storage.getUser(completedBooking.patientId);
+        
+        if (doctor && patient) {
+          await sendFeedbackRequest({ booking: completedBooking, doctor, patient });
+        }
+      } catch (notificationError) {
+        console.error("Error sending feedback request:", notificationError);
+        // Don't fail the request if email sending fails
+      }
+
+      res.json(completedBooking);
+    } catch (error: any) {
+      res.status(400).json({ message: "Error completing booking: " + error.message });
+    }
+  });
+
+  // Submit feedback
+  app.post("/api/feedback", async (req, res) => {
+    try {
+      const feedbackData = insertFeedbackSchema.parse(req.body);
+      
+      // Check if feedback already exists for this booking
+      const existingFeedback = await storage.getFeedbackByBooking(feedbackData.bookingId);
+      if (existingFeedback) {
+        return res.status(400).json({ message: "Feedback already submitted for this booking" });
+      }
+
+      // Verify booking exists and belongs to the patient
+      const booking = await storage.getBooking(feedbackData.bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      if (booking.patientId !== feedbackData.patientId) {
+        return res.status(403).json({ message: "Unauthorized to submit feedback for this booking" });
+      }
+
+      const feedback = await storage.createFeedback(feedbackData);
+      res.status(201).json(feedback);
+    } catch (error: any) {
+      res.status(400).json({ message: "Error creating feedback: " + error.message });
+    }
+  });
+
+  // Get feedback for a specific booking
+  app.get("/api/feedback/booking/:id", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const feedback = await storage.getFeedbackByBooking(bookingId);
+      
+      if (!feedback) {
+        return res.status(404).json({ message: "Feedback not found" });
+      }
+
+      res.json(feedback);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error retrieving feedback: " + error.message });
+    }
+  });
+
+  // Get doctor average rating
+  app.get("/api/doctors/:id/rating", async (req, res) => {
+    try {
+      const doctorId = parseInt(req.params.id);
+      const rating = await storage.getDoctorAverageRating(doctorId);
+      res.json(rating);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error retrieving doctor rating: " + error.message });
     }
   });
 
