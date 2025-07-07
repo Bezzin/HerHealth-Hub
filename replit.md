@@ -216,6 +216,10 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 07, 2025. Integrated OpenAI API for generating 3-bullet clinical summaries from patient symptom data
 - July 07, 2025. Added symptom data storage in booking records with JSON questionnaire answers and AI-generated summaries
 - July 07, 2025. Created symptom summary component for doctors to review patient information before consultations
+- July 07, 2025. Added indemnity confirmation checkbox to doctor onboarding with required "MDU/MPS/MDDUS indemnity covers private video consultations" 
+- July 07, 2025. Extended DoctorProfile schema with indemnityConfirmed boolean field and validation requirements
+- July 07, 2025. Enhanced admin panel to display green shield icon for doctors with confirmed indemnity coverage
+- July 07, 2025. Form validation prevents doctor onboarding without indemnity confirmation checkbox checked
 
 ## User Preferences
 

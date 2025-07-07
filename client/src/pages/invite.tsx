@@ -11,7 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CheckCircle, UserPlus } from "lucide-react";
+import { Loader2, CheckCircle, UserPlus, Shield } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const onboardingSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -21,6 +22,9 @@ const onboardingSchema = z.object({
   experience: z.string().min(10, "Please describe your experience"),
   bio: z.string().optional(),
   email: z.string().email(),
+  indemnityConfirmed: z.boolean().refine(val => val === true, {
+    message: "You must confirm your indemnity coverage to proceed"
+  }),
   slots: z.array(z.object({
     date: z.string(),
     time: z.string(),
@@ -63,6 +67,7 @@ export default function Invite() {
       experience: "",
       bio: "",
       email: "",
+      indemnityConfirmed: false,
       slots: [],
     },
   });
@@ -305,6 +310,31 @@ export default function Invite() {
                               ))}
                             </SelectContent>
                           </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="indemnityConfirmed"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-teal-200 p-4 bg-teal-50">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="flex items-center gap-2 text-sm font-medium">
+                              <Shield className="w-4 h-4 text-teal-600" />
+                              Professional Indemnity Confirmation
+                            </FormLabel>
+                            <p className="text-xs text-gray-600">
+                              I confirm my MDU/MPS/MDDUS indemnity covers private video consultations
+                            </p>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}

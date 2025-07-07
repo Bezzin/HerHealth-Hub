@@ -112,6 +112,7 @@ export class MemStorage implements IStorage {
       experience: "8 years experience",
       bio: "Specializing in women's health and general practice with a focus on preventive care.",
       profileImage: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
+      indemnityConfirmed: true,
     });
 
     const profile2 = await this.createDoctorProfile({
@@ -121,6 +122,7 @@ export class MemStorage implements IStorage {
       experience: "12 years experience",
       bio: "Board-certified gynecologist specializing in reproductive health and hormonal disorders.",
       profileImage: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
+      indemnityConfirmed: true,
     });
 
     const profile3 = await this.createDoctorProfile({
@@ -130,6 +132,7 @@ export class MemStorage implements IStorage {
       experience: "15 years experience",
       bio: "Licensed therapist specializing in women's mental health and wellness.",
       profileImage: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
+      indemnityConfirmed: true,
     });
 
     // Create slots for next 7 days for each doctor
@@ -230,6 +233,7 @@ export class MemStorage implements IStorage {
       reviewCount: Math.floor(Math.random() * 200) + 50,
       availability: "Available today",
       stripeAccountId: null,
+      indemnityConfirmed: insertProfile.indemnityConfirmed ?? false,
     };
     this.doctorProfiles.set(id, profile);
     return profile;

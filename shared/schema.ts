@@ -25,6 +25,7 @@ export const doctorProfiles = pgTable("doctor_profiles", {
   availability: text("availability").default("Available today"),
   stripeAccountId: text("stripe_account_id"),
   profileImage: text("profile_image"),
+  indemnityConfirmed: boolean("indemnity_confirmed").default(false).notNull(),
 });
 
 export const slots = pgTable("slots", {
@@ -88,6 +89,7 @@ export const insertDoctorProfileSchema = createInsertSchema(doctorProfiles).pick
   experience: true,
   bio: true,
   profileImage: true,
+  indemnityConfirmed: true,
 });
 
 export const insertSlotSchema = createInsertSchema(slots).pick({

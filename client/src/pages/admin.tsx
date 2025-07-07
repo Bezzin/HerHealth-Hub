@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Mail, Plus, UserPlus, ExternalLink } from "lucide-react";
+import { Copy, Mail, Plus, UserPlus, ExternalLink, Shield } from "lucide-react";
 
 const inviteSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -22,6 +22,96 @@ interface GeneratedInvite {
   inviteUrl: string;
   token: string;
   timestamp: Date;
+}
+
+function DoctorsList() {
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
+
+  const fetchDoctors = async () => {
+    try {
+      const response = await apiRequest("GET", "/api/doctors");
+      const doctorsData = await response.json();
+      setDoctors(doctorsData);
+    } catch (error) {
+      console.error("Failed to fetch doctors:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Registered Doctors</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading doctors...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="mt-8">
+      <CardHeader>
+        <CardTitle>Registered Doctors</CardTitle>
+        <CardDescription>
+          {doctors.length} doctor{doctors.length !== 1 ? 's' : ''} registered
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {doctors.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <UserPlus className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>No doctors registered yet</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {doctors.map((doctor) => (
+              <div key={doctor.id} className="border rounded-lg p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-3">
+                    <img
+                      src={doctor.profileImage}
+                      alt={`Dr. ${doctor.firstName} ${doctor.lastName}`}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div>
+                      <h4 className="font-medium text-gray-900">
+                        Dr. {doctor.firstName} {doctor.lastName}
+                      </h4>
+                      <p className="text-sm text-gray-600">{doctor.specialty}</p>
+                      <p className="text-xs text-gray-500">{doctor.qualifications}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {doctor.indemnityConfirmed && (
+                      <div className="flex items-center space-x-1 text-green-600">
+                        <Shield className="w-4 h-4" />
+                        <span className="text-xs font-medium">Indemnity Confirmed</span>
+                      </div>
+                    )}
+                    <Badge variant={doctor.indemnityConfirmed ? "default" : "secondary"}>
+                      {doctor.indemnityConfirmed ? "Verified" : "Pending"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function Admin() {
@@ -213,6 +303,9 @@ export default function Admin() {
             </Card>
           </div>
         </div>
+
+        {/* Registered Doctors */}
+        <DoctorsList />
 
         {/* Instructions */}
         <Card className="mt-8">
