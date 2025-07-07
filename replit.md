@@ -190,6 +190,7 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 
 - July 07, 2025. Initial setup
 - July 07, 2025. Added doctor self-onboarding system with invite tokens, profile creation, and slot management
+- July 07, 2025. Fixed Stripe payment intent creation by removing application_fee_amount (requires Stripe Connect setup)
 
 ## User Preferences
 

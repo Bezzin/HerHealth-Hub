@@ -100,33 +100,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { amount, bookingId } = req.body;
       
-      let transferGroup = undefined;
-      let applicationFeeAmount = undefined;
+      console.log("Creating payment intent with:", { amount, bookingId });
       
-      // If booking exists, set up revenue splitting
-      if (bookingId) {
-        const booking = await storage.getBooking(bookingId);
-        if (booking) {
-          const doctor = await storage.getDoctorProfile(booking.doctorId);
-          transferGroup = `booking_${bookingId}`;
-          
-          // Platform takes £20, doctor gets £35 out of £55
-          applicationFeeAmount = 20 * 100; // £20 in pence
-          
-          // Note: In production, you'd need the doctor's Stripe Connect account ID
-          // This requires implementing Stripe Connect onboarding for doctors
-        }
-      }
-      
-      const paymentIntent = await stripe.paymentIntents.create({
+      // Simple payment intent without revenue splitting
+      // Note: Stripe Connect revenue splitting will be implemented in production
+      const paymentIntentData = {
         amount: Math.round(amount * 100), // Convert to pence
         currency: "gbp",
-        application_fee_amount: applicationFeeAmount,
-        transfer_group: transferGroup,
         metadata: {
           bookingId: bookingId?.toString() || "",
+          // Track revenue split in metadata for now
+          platformFee: "20.00",
+          doctorEarnings: "35.00",
         },
-      });
+      };
+      
+      console.log("Creating Stripe payment intent with data:", paymentIntentData);
+      
+      const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
+
+      console.log("Payment intent created successfully:", paymentIntent.id);
 
       // Update booking with payment intent if booking exists
       if (bookingId) {
@@ -135,7 +128,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
-      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+      console.error("Stripe payment intent creation error:", {
+        message: error.message,
+        type: error.type,
+        code: error.code,
+        decline_code: error.decline_code,
+        param: error.param,
+        stack: error.stack
+      });
+      
+      res.status(500).json({ 
+        message: "Error creating payment intent: " + error.message,
+        error: {
+          type: error.type,
+          code: error.code,
+          param: error.param
+        }
+      });
     }
   });
 
