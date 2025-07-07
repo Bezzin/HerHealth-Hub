@@ -19,6 +19,7 @@ const bookingSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Valid email is required"),
+  phone: z.string().optional(),
   reasonForConsultation: z.string().min(1, "Please describe your consultation reason"),
   slotId: z.number().min(1, "Please select a time slot"),
   acceptTerms: z.boolean().refine(val => val === true, "You must accept terms and conditions"),
@@ -47,6 +48,7 @@ export default function Booking() {
       firstName: "",
       lastName: "",
       email: "",
+      phone: "",
       reasonForConsultation: "",
       slotId: 0,
       acceptTerms: false,
@@ -65,8 +67,14 @@ export default function Booking() {
       }
 
       const booking = await apiRequest("POST", "/api/bookings", {
-        ...data,
+        patientName: `${data.firstName} ${data.lastName}`,
+        patientEmail: data.email,
+        patientPhone: data.phone || null,
+        reasonForConsultation: data.reasonForConsultation,
+        doctorId: parseInt(doctorId!),
         slotId: selectedSlot,
+        appointmentDate: slots?.find(s => s.id === selectedSlot)?.date,
+        appointmentTime: slots?.find(s => s.id === selectedSlot)?.time,
       });
 
       const bookingResponse = await booking.json();
@@ -229,6 +237,19 @@ export default function Booking() {
                     />
                     {form.formState.errors.email && (
                       <p className="text-sm text-red-600 mt-1">{form.formState.errors.email.message}</p>
+                    )}
+                  </div>
+                  <div className="mt-4">
+                    <Label htmlFor="phone">Phone Number (Optional)</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      {...form.register("phone")}
+                      placeholder="Enter your phone number for SMS reminders"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">We'll send you SMS reminders 24 hours before your appointment</p>
+                    {form.formState.errors.phone && (
+                      <p className="text-sm text-red-600 mt-1">{form.formState.errors.phone.message}</p>
                     )}
                   </div>
                   <div className="mt-4">

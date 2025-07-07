@@ -43,9 +43,11 @@ export const bookings = pgTable("bookings", {
   appointmentDate: timestamp("appointment_date").notNull(),
   appointmentTime: text("appointment_time").notNull(),
   reasonForConsultation: text("reason_for_consultation"),
+  patientPhone: text("patient_phone"), // Optional phone number for SMS reminders
   status: text("status").default("pending"), // pending, confirmed, completed, cancelled
   paymentIntentId: text("payment_intent_id"),
   meetingUrl: text("meeting_url"),
+  remindersSent: boolean("reminders_sent").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -88,6 +90,7 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   appointmentDate: true,
   appointmentTime: true,
   reasonForConsultation: true,
+  patientPhone: true,
 });
 
 export const insertDoctorInviteSchema = createInsertSchema(doctorInvites).pick({

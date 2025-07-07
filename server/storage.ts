@@ -28,6 +28,8 @@ export interface IStorage {
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBookingPayment(bookingId: number, paymentIntentId: string): Promise<Booking>;
   updateBookingStatus(bookingId: number, status: string): Promise<Booking>;
+  markRemindersSent(bookingId: number): Promise<Booking>;
+  getBookingsNeedingReminders(): Promise<Booking[]>;
 
   // Doctor invite operations
   createDoctorInvite(invite: InsertDoctorInvite): Promise<DoctorInvite>;
@@ -270,9 +272,11 @@ export class MemStorage implements IStorage {
       ...insertBooking,
       id,
       reasonForConsultation: insertBooking.reasonForConsultation ?? null,
+      patientPhone: insertBooking.patientPhone ?? null,
       status: "pending",
       paymentIntentId: null,
       meetingUrl: null,
+      remindersSent: false,
       createdAt: new Date(),
     };
     this.bookings.set(id, booking);
@@ -342,6 +346,35 @@ export class MemStorage implements IStorage {
         this.doctorInvites.delete(id);
       }
     }
+  }
+
+  async markRemindersSent(bookingId: number): Promise<Booking> {
+    const booking = this.bookings.get(bookingId);
+    if (!booking) {
+      throw new Error(`Booking with id ${bookingId} not found`);
+    }
+    
+    const updatedBooking = { ...booking, remindersSent: true };
+    this.bookings.set(bookingId, updatedBooking);
+    return updatedBooking;
+  }
+
+  async getBookingsNeedingReminders(): Promise<Booking[]> {
+    const now = new Date();
+    const twentyThreeHours = 23 * 60 * 60 * 1000; // 23 hours in milliseconds
+    const twentyFiveHours = 25 * 60 * 60 * 1000; // 25 hours in milliseconds
+    
+    return Array.from(this.bookings.values()).filter(booking => {
+      if (booking.remindersSent || booking.status !== 'confirmed') {
+        return false;
+      }
+      
+      const appointmentTime = new Date(booking.appointmentDate);
+      const timeDiff = appointmentTime.getTime() - now.getTime();
+      
+      // Send reminders for bookings that are 24±1 hours away
+      return timeDiff >= twentyThreeHours && timeDiff <= twentyFiveHours;
+    });
   }
 }
 

@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema } from "@shared/schema";
+import { sendBookingConfirmation } from "./notifications";
 import { randomBytes } from "crypto";
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -51,7 +52,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create booking
   app.post("/api/bookings", async (req, res) => {
     try {
-      const { slotId, email, firstName, lastName, reasonForConsultation } = req.body;
+      const { slotId, email, firstName, lastName, reasonForConsultation, patientName, patientEmail, patientPhone } = req.body;
+      
+      // Handle both old and new API formats
+      const userEmail = email || patientEmail;
+      let userFirstName = firstName;
+      let userLastName = lastName;
+      
+      if (patientName && !firstName) {
+        const [first, ...lastParts] = patientName.split(' ');
+        userFirstName = first;
+        userLastName = lastParts.join(' ');
+      }
       
       // Verify slot exists and is available
       const slot = await storage.getSlot(slotId);
@@ -60,12 +72,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create or get user
-      let user = await storage.getUserByEmail(email);
+      let user = await storage.getUserByEmail(userEmail);
       if (!user) {
         user = await storage.createUser({
-          email,
-          firstName,
-          lastName,
+          email: userEmail,
+          firstName: userFirstName,
+          lastName: userLastName,
           isDoctor: false,
         });
       }
@@ -87,6 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         appointmentDate,
         appointmentTime: slot.time,
         reasonForConsultation,
+        patientPhone: patientPhone || null,
       });
 
       res.json(booking);
@@ -284,13 +297,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const bookingId = paymentIntent.metadata.bookingId;
         
         if (bookingId) {
-          await storage.updateBookingStatus(parseInt(bookingId), "confirmed");
+          // Update booking status
+          const booking = await storage.updateBookingStatus(parseInt(bookingId), "confirmed");
+          
+          // Send booking confirmation emails
+          try {
+            const doctor = await storage.getDoctorProfile(booking.doctorId);
+            const patient = await storage.getUser(booking.patientId);
+            
+            if (doctor && patient) {
+              await sendBookingConfirmation({ booking, doctor, patient });
+            }
+          } catch (notificationError) {
+            console.error("Error sending booking confirmation:", notificationError);
+            // Don't fail the webhook if email sending fails
+          }
         }
       }
 
       res.json({ received: true });
     } catch (error: any) {
       res.status(400).json({ message: "Webhook error: " + error.message });
+    }
+  });
+
+  // Test endpoint to manually trigger reminder checking
+  app.get("/api/test-reminders", async (req, res) => {
+    try {
+      const bookingsNeedingReminders = await storage.getBookingsNeedingReminders();
+      console.log(`🔍 Test: Found ${bookingsNeedingReminders.length} booking(s) needing reminders`);
+      
+      const results = [];
+      
+      for (const booking of bookingsNeedingReminders) {
+        const doctor = await storage.getDoctorProfile(booking.doctorId);
+        const patient = await storage.getUser(booking.patientId);
+        
+        if (doctor && patient) {
+          const details = { booking, doctor, patient };
+          
+          // Test the notification functions (they'll log warnings if services not configured)
+          console.log(`📧 Test: Would send reminders for booking #${booking.id}`);
+          console.log(`   📅 Appointment: ${booking.appointmentDate} at ${booking.appointmentTime}`);
+          console.log(`   👩 Patient: ${patient.firstName} ${patient.lastName} (${patient.email})`);
+          console.log(`   📱 Phone: ${booking.patientPhone || 'Not provided'}`);
+          
+          results.push({
+            bookingId: booking.id,
+            patientName: `${patient.firstName} ${patient.lastName}`,
+            patientEmail: patient.email,
+            patientPhone: booking.patientPhone,
+            appointmentDate: booking.appointmentDate,
+            appointmentTime: booking.appointmentTime,
+            doctorSpecialty: doctor.specialty,
+          });
+        }
+      }
+      
+      res.json({ 
+        message: `Found ${bookingsNeedingReminders.length} bookings needing reminders`,
+        bookings: results,
+        note: "This is a test endpoint. In production, reminders run automatically every hour."
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error checking reminders: " + error.message });
     }
   });
 

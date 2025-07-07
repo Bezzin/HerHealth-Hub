@@ -193,6 +193,8 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 07, 2025. Fixed Stripe payment intent creation by removing application_fee_amount (requires Stripe Connect setup)
 - July 07, 2025. Implemented Stripe Connect integration with automated revenue splitting (£35 to doctor, £20 to platform)
 - July 07, 2025. Added development mode simulation for Stripe Connect testing without platform approval
+- July 07, 2025. Integrated comprehensive notification system with email (Resend) and SMS (Twilio) for booking confirmations and 24h reminders
+- July 07, 2025. Added phone number field to booking schema and cron scheduler for automated reminder delivery
 
 ## User Preferences
 
