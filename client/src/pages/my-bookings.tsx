@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Calendar, Clock, User, AlertCircle, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, Clock, User, AlertCircle, CheckCircle, XCircle, RotateCcw, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,8 +13,18 @@ export default function MyBookings() {
   const [email, setEmail] = useState("jane@example.com"); // In real app, get from auth
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Update current time every minute to check for Zoom button availability
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
 
   const { data: bookings, isLoading } = useQuery<Booking[]>({
     queryKey: [`/api/bookings/user/${email}`],
@@ -72,26 +82,56 @@ export default function MyBookings() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "confirmed":
-        return <CheckCircle className="text-green-500" size={20} />;
-      case "cancelled":
-        return <XCircle className="text-red-500" size={20} />;
-      case "completed":
-        return <CheckCircle className="text-blue-500" size={20} />;
+      case 'pending':
+        return <Clock className="w-4 h-4" />;
+      case 'completed':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4" />;
+      case 'rescheduled':
+        return <RotateCcw className="w-4 h-4" />;
       default:
-        return <AlertCircle className="text-yellow-500" size={20} />;
+        return <AlertCircle className="w-4 h-4" />;
     }
   };
 
   const canModifyBooking = (booking: Booking) => {
-    if (booking.status !== "confirmed") return false;
+    if (booking.status !== "pending") return false;
     
     const now = new Date();
-    const appointmentTime = new Date(booking.appointmentDate);
-    const timeDiff = appointmentTime.getTime() - now.getTime();
+    const appointmentDateTime = new Date(`${booking.appointmentDate}T${booking.appointmentTime}:00`);
+    const timeDiff = appointmentDateTime.getTime() - now.getTime();
     const twentyFourHours = 24 * 60 * 60 * 1000;
     
     return timeDiff >= twentyFourHours;
+  };
+
+  const canJoinZoom = (booking: Booking) => {
+    if (booking.status !== 'pending') return false;
+    
+    const now = currentTime.getTime();
+    const appointmentDateTime = new Date(`${booking.appointmentDate}T${booking.appointmentTime}:00`);
+    const timeDiff = appointmentDateTime.getTime() - now;
+    const fifteenMinutes = 15 * 60 * 1000;
+    const thirtyMinutes = 30 * 60 * 1000;
+    
+    // Allow joining 15 minutes before until 30 minutes after start time
+    return timeDiff <= fifteenMinutes && timeDiff >= -thirtyMinutes;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'rescheduled':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -149,12 +189,17 @@ export default function MyBookings() {
               <Card key={booking.id} className="overflow-hidden">
                 <CardHeader className="bg-white border-b">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      {getStatusIcon(booking.status)}
-                      <span className="capitalize">{booking.status} Appointment</span>
+                    <CardTitle className="text-lg font-semibold text-gray-900">
+                      Consultation Appointment
                     </CardTitle>
-                    <div className="text-sm text-gray-500">
-                      Booking #{booking.id}
+                    <div className="flex items-center gap-3">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-medium border ${getStatusColor(booking.status)}`}>
+                        {getStatusIcon(booking.status)}
+                        <span className="capitalize">{booking.status}</span>
+                      </span>
+                      <div className="text-sm text-gray-500">
+                        #{booking.id}
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
@@ -184,6 +229,16 @@ export default function MyBookings() {
                     </div>
 
                     <div className="flex flex-col gap-2">
+                      {canJoinZoom(booking) && (
+                        <Button 
+                          className="bg-teal-600 hover:bg-teal-700 text-white"
+                          size="sm"
+                          onClick={() => window.open(booking.meetingUrl || `https://zoom.us/j/meeting-${booking.id}`, '_blank')}
+                        >
+                          <Video size={16} className="mr-2" />
+                          Join Zoom Call
+                        </Button>
+                      )}
                       {canModifyBooking(booking) ? (
                         <>
                           <Dialog>
