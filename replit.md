@@ -205,6 +205,9 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 07, 2025. Updated My Bookings page with color-coded status indicators (blue=pending, green=completed, red=cancelled, yellow=rescheduled)
 - July 07, 2025. Added "Join Zoom" button that appears 15 minutes before appointment start time and remains active during consultation window
 - July 07, 2025. Enhanced booking dashboard with visual status badges and improved appointment management interface
+- July 07, 2025. Implemented WebSocket real-time notifications for doctor dashboard using native ws package
+- July 07, 2025. Added instant toast notifications when new bookings arrive with patient name and appointment details
+- July 07, 2025. Created WebSocket server on /ws path with doctor registration system for targeted notifications
 
 ## User Preferences
 

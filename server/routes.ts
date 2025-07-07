@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema, insertFeedbackSchema } from "@shared/schema";
@@ -100,6 +101,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         appointmentTime: slot.time,
         reasonForConsultation,
         patientPhone: patientPhone || null,
+      });
+
+      // Notify doctor via WebSocket
+      (app as any).notifyDoctorOfNewBooking?.(slot.doctorId, {
+        ...booking,
+        patientName: `${userFirstName} ${userLastName}`
       });
 
       res.json(booking);
@@ -648,5 +655,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+
+  // WebSocket server setup for real-time notifications
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store connected doctors by doctorId for targeted notifications
+  const connectedDoctors = new Map<number, WebSocket>();
+  
+  wss.on('connection', (ws, req) => {
+    console.log('🔌 WebSocket client connected');
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Doctor registration for notifications
+        if (data.type === 'register' && data.doctorId) {
+          connectedDoctors.set(data.doctorId, ws);
+          console.log(`👨‍⚕️ Doctor ${data.doctorId} registered for notifications`);
+          
+          ws.send(JSON.stringify({
+            type: 'registered',
+            message: 'Successfully registered for notifications'
+          }));
+        }
+      } catch (error) {
+        console.error('❌ WebSocket message error:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      // Remove doctor from connected list when they disconnect
+      for (const [doctorId, socket] of Array.from(connectedDoctors.entries())) {
+        if (socket === ws) {
+          connectedDoctors.delete(doctorId);
+          console.log(`👨‍⚕️ Doctor ${doctorId} disconnected`);
+          break;
+        }
+      }
+    });
+    
+    ws.on('error', (error) => {
+      console.error('❌ WebSocket error:', error);
+    });
+  });
+
+  // Function to notify doctors of new bookings
+  const notifyDoctorOfNewBooking = (doctorId: number, bookingData: any) => {
+    const doctorSocket = connectedDoctors.get(doctorId);
+    
+    if (doctorSocket && doctorSocket.readyState === WebSocket.OPEN) {
+      doctorSocket.send(JSON.stringify({
+        type: 'new_booking',
+        data: {
+          patientName: bookingData.patientName,
+          appointmentDate: bookingData.appointmentDate,
+          appointmentTime: bookingData.appointmentTime,
+          reasonForConsultation: bookingData.reasonForConsultation,
+          bookingId: bookingData.id
+        }
+      }));
+      console.log(`📧 Notified doctor ${doctorId} of new booking ${bookingData.id}`);
+    }
+  };
+
+  // Attach notification function to app for use in routes
+  (app as any).notifyDoctorOfNewBooking = notifyDoctorOfNewBooking;
+
   return httpServer;
 }

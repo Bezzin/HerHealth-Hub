@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearch } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
@@ -37,6 +37,65 @@ export default function DoctorDashboard() {
   const search = useSearch();
   const { toast } = useToast();
   const [doctorId] = useState(4); // In real app, get from auth context
+  const wsRef = useRef<WebSocket | null>(null);
+
+  // WebSocket connection for real-time notifications
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    
+    try {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('🔌 Connected to WebSocket');
+        // Register as a doctor for notifications
+        ws.send(JSON.stringify({
+          type: 'register',
+          doctorId: doctorId
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'new_booking') {
+            const booking = data.data;
+            
+            // Show toast notification
+            toast({
+              title: "🎉 New Booking Received!",
+              description: `${booking.patientName} has booked an appointment for ${new Date(booking.appointmentDate).toLocaleDateString()} at ${booking.appointmentTime}`,
+              duration: 8000,
+            });
+          } else if (data.type === 'registered') {
+            console.log('✅ Successfully registered for notifications');
+          }
+        } catch (error) {
+          console.error('❌ Error parsing WebSocket message:', error);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('🔌 WebSocket connection closed');
+      };
+
+      ws.onerror = (error) => {
+        console.error('❌ WebSocket error:', error);
+      };
+    } catch (error) {
+      console.error('❌ Failed to connect to WebSocket:', error);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [doctorId, toast]);
   
   const [stats] = useState<DoctorStats>({
     totalBookings: 12,
