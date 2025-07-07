@@ -95,25 +95,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Stripe payment route for consultation payments with revenue splitting
+  // Create Stripe Connect account for doctor
+  app.post("/api/doctor/stripe-account", async (req, res) => {
+    try {
+      const { doctorId, email } = req.body;
+      
+      console.log("Creating Stripe account for doctor:", doctorId, email);
+      
+      // In development, simulate Stripe Connect setup since it requires platform approval
+      if (process.env.NODE_ENV === 'development') {
+        // Create fake account ID for testing
+        const fakeAccountId = `acct_test_${Math.random().toString(36).substring(7)}`;
+        
+        // Save the fake account ID to doctor profile
+        await storage.updateDoctorStripeAccount(doctorId, fakeAccountId);
+        
+        console.log("Created test Stripe account:", fakeAccountId);
+        
+        // Return fake account link that redirects to success
+        res.json({ 
+          accountId: fakeAccountId,
+          accountLinkUrl: `${req.headers.origin}/dashboard/doctor?stripe_success=true`
+        });
+        return;
+      }
+      
+      // Production: Create real Express account (requires Stripe Connect approval)
+      const account = await stripe.accounts.create({
+        type: 'express',
+        country: 'GB',
+        email: email,
+        capabilities: {
+          transfers: { requested: true },
+        },
+      });
+      
+      console.log("Created Stripe account:", account.id);
+      
+      // Save the account ID to doctor profile
+      await storage.updateDoctorStripeAccount(doctorId, account.id);
+      
+      // Create account link for onboarding
+      const accountLink = await stripe.accountLinks.create({
+        account: account.id,
+        refresh_url: `${req.headers.origin}/dashboard/doctor?stripe_error=true`,
+        return_url: `${req.headers.origin}/dashboard/doctor?stripe_success=true`,
+        type: 'account_onboarding',
+      });
+      
+      res.json({ 
+        accountId: account.id,
+        accountLinkUrl: accountLink.url 
+      });
+    } catch (error: any) {
+      console.error("Stripe account creation error:", error);
+      res.status(500).json({ 
+        message: "Error creating Stripe account: " + error.message 
+      });
+    }
+  });
+
+  // Get Stripe account status
+  app.get("/api/doctor/:doctorId/stripe-status", async (req, res) => {
+    try {
+      const doctorId = parseInt(req.params.doctorId);
+      const doctor = await storage.getDoctorProfile(doctorId);
+      
+      if (!doctor || !doctor.stripeAccountId) {
+        return res.json({ connected: false });
+      }
+      
+      // In development, simulate connected status for test accounts
+      if (process.env.NODE_ENV === 'development' && doctor.stripeAccountId.startsWith('acct_test_')) {
+        return res.json({
+          connected: true,
+          accountId: doctor.stripeAccountId,
+          detailsSubmitted: true,
+          chargesEnabled: true,
+        });
+      }
+      
+      // Production: Check real Stripe account status
+      const account = await stripe.accounts.retrieve(doctor.stripeAccountId);
+      
+      res.json({
+        connected: account.details_submitted && account.charges_enabled,
+        accountId: doctor.stripeAccountId,
+        detailsSubmitted: account.details_submitted,
+        chargesEnabled: account.charges_enabled,
+      });
+    } catch (error: any) {
+      console.error("Stripe account status error:", error);
+      res.status(500).json({ 
+        message: "Error checking Stripe status: " + error.message 
+      });
+    }
+  });
+
+  // Stripe payment route with Connect destination payments
   app.post("/api/create-payment-intent", async (req, res) => {
     try {
       const { amount, bookingId } = req.body;
       
       console.log("Creating payment intent with:", { amount, bookingId });
       
-      // Simple payment intent without revenue splitting
-      // Note: Stripe Connect revenue splitting will be implemented in production
-      const paymentIntentData = {
+      let paymentIntentData: any = {
         amount: Math.round(amount * 100), // Convert to pence
         currency: "gbp",
         metadata: {
           bookingId: bookingId?.toString() || "",
-          // Track revenue split in metadata for now
-          platformFee: "20.00",
-          doctorEarnings: "35.00",
         },
       };
+      
+      // If booking exists, set up revenue splitting with connected account
+      if (bookingId) {
+        const booking = await storage.getBooking(bookingId);
+        console.log("Found booking:", booking);
+        
+        if (booking) {
+          const doctor = await storage.getDoctorProfile(booking.doctorId);
+          console.log("Found doctor:", doctor);
+          
+          if (doctor && doctor.stripeAccountId) {
+            // In development, simulate destination payment with test accounts
+            if (process.env.NODE_ENV === 'development' && doctor.stripeAccountId.startsWith('acct_test_')) {
+              console.log("Development mode: simulating Stripe Connect payment for:", doctor.stripeAccountId);
+              // Add metadata to track the revenue split for development
+              paymentIntentData.metadata.stripeAccountId = doctor.stripeAccountId;
+              paymentIntentData.metadata.platformFee = "20.00";
+              paymentIntentData.metadata.doctorEarnings = "35.00";
+            } else {
+              // Production: Use real destination payment
+              paymentIntentData.transfer_data = {
+                destination: doctor.stripeAccountId,
+              };
+              paymentIntentData.application_fee_amount = 2000; // £20 platform fee
+              console.log("Using Stripe Connect destination payment for doctor:", doctor.stripeAccountId);
+            }
+          } else {
+            console.log("Doctor has no Stripe account, using standard payment");
+          }
+        }
+      }
       
       console.log("Creating Stripe payment intent with data:", paymentIntentData);
       

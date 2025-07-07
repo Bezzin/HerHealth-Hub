@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearch } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Users, PoundSterling, Settings, Home, Plus } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Calendar, Clock, Users, PoundSterling, Settings, Home, Plus, CheckCircle, AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface DoctorStats {
   totalBookings: number;
@@ -31,12 +34,46 @@ interface Slot {
 }
 
 export default function DoctorDashboard() {
+  const search = useSearch();
+  const { toast } = useToast();
+  const [doctorId] = useState(4); // In real app, get from auth context
+  
   const [stats] = useState<DoctorStats>({
     totalBookings: 12,
     todayBookings: 3,
     weeklyEarnings: 420,
     availableSlots: 8,
   });
+
+  // Check Stripe Connect status
+  const { data: stripeStatus, refetch: refetchStripeStatus } = useQuery({
+    queryKey: ['/api/doctor', doctorId, 'stripe-status'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/doctor/${doctorId}/stripe-status`);
+      return response.json();
+    },
+  });
+
+  // Handle Stripe Connect success/error callbacks
+  useEffect(() => {
+    const urlParams = new URLSearchParams(search);
+    const stripeSuccess = urlParams.get('stripe_success');
+    const stripeError = urlParams.get('stripe_error');
+    
+    if (stripeSuccess === 'true') {
+      toast({
+        title: "Payment Setup Complete!",
+        description: "Your Stripe account has been connected successfully.",
+      });
+      refetchStripeStatus();
+    } else if (stripeError === 'true') {
+      toast({
+        title: "Payment Setup Error",
+        description: "There was an issue setting up your payment account. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [search, toast, refetchStripeStatus]);
 
   const [upcomingBookings] = useState<Booking[]>([
     {
@@ -121,6 +158,51 @@ export default function DoctorDashboard() {
               </Button>
             </div>
           </div>
+          
+          {/* Stripe Connect Status */}
+          {stripeStatus && !stripeStatus.connected && (
+            <div className="pb-4">
+              <Alert className="bg-yellow-50 border-yellow-200">
+                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-yellow-800">
+                  Complete your payment setup to start earning from consultations.
+                  <Button 
+                    className="ml-2" 
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const response = await apiRequest("POST", "/api/doctor/stripe-account", {
+                          doctorId,
+                          email: "doctor@example.com", // In real app, get from user context
+                        });
+                        const result = await response.json();
+                        window.location.href = result.accountLinkUrl;
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to setup payment account. Please try again.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    Complete Setup
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+          
+          {stripeStatus && stripeStatus.connected && (
+            <div className="pb-4">
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  Payment account connected successfully! You're ready to receive payments.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
         </div>
       </div>
 

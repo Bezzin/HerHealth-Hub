@@ -20,6 +20,7 @@ const onboardingSchema = z.object({
   qualifications: z.string().min(10, "Please provide your qualifications"),
   experience: z.string().min(10, "Please describe your experience"),
   bio: z.string().optional(),
+  email: z.string().email(),
   slots: z.array(z.object({
     date: z.string(),
     time: z.string(),
@@ -61,6 +62,7 @@ export default function Invite() {
       qualifications: "",
       experience: "",
       bio: "",
+      email: "",
       slots: [],
     },
   });
@@ -92,6 +94,8 @@ export default function Invite() {
       const response = await apiRequest("GET", `/api/doctor/invite/${token}`);
       const data = await response.json();
       setInviteData(data);
+      // Set email in form
+      form.setValue("email", data.email);
     } catch (error: any) {
       toast({
         title: "Invalid Invite",
@@ -129,15 +133,33 @@ export default function Invite() {
       const result = await response.json();
 
       toast({
-        title: "Welcome to HerHealth Hub!",
-        description: "Your doctor profile has been created successfully.",
+        title: "Profile Created!",
+        description: "Setting up your payment account...",
       });
 
-      // Redirect to doctor dashboard
-      if (result.redirectUrl) {
-        window.location.href = result.redirectUrl;
-      } else {
-        setIsCompleted(true);
+      // Create Stripe Connect account
+      try {
+        const stripeResponse = await apiRequest("POST", "/api/doctor/stripe-account", {
+          doctorId: result.doctorId,
+          email: data.email,
+        });
+        
+        const stripeResult = await stripeResponse.json();
+        
+        // Redirect to Stripe onboarding
+        window.location.href = stripeResult.accountLinkUrl;
+      } catch (stripeError: any) {
+        console.error("Stripe account creation failed:", stripeError);
+        toast({
+          title: "Payment Setup Error", 
+          description: "Profile created but payment setup failed. You can complete this later.",
+          variant: "destructive",
+        });
+        
+        // Still redirect to dashboard even if Stripe setup fails
+        setTimeout(() => {
+          window.location.href = "/dashboard/doctor";
+        }, 2000);
       }
     } catch (error: any) {
       toast({
