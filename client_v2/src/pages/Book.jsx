@@ -226,6 +226,7 @@ export default function Book() {
                         <Label htmlFor="firstName">First Name *</Label>
                         <Input
                           id="firstName"
+                          name="name"
                           {...form.register("firstName")}
                           className="mt-1"
                           placeholder="Enter your first name"
@@ -253,6 +254,7 @@ export default function Book() {
                         <Label htmlFor="email">Email Address *</Label>
                         <Input
                           id="email"
+                          name="email"
                           type="email"
                           {...form.register("email")}
                           className="mt-1"
@@ -266,6 +268,7 @@ export default function Book() {
                         <Label htmlFor="phone">Phone Number (Optional)</Label>
                         <Input
                           id="phone"
+                          name="phone"
                           {...form.register("phone")}
                           className="mt-1"
                           placeholder="For appointment reminders"
@@ -278,6 +281,7 @@ export default function Book() {
                       <Label htmlFor="reason">Reason for Consultation *</Label>
                       <Textarea
                         id="reason"
+                        name="reasonForConsultation"
                         {...form.register("reasonForConsultation")}
                         className="mt-1"
                         rows={4}
@@ -290,7 +294,7 @@ export default function Book() {
 
                     {/* Time Slot Selection */}
                     <div>
-                      <Label className="text-base font-semibold">Select Your Preferred Time Slot *</Label>
+                      <Label className="text-base font-semibold">Available Times</Label>
                       <p className="text-sm text-gray-600 mb-4">Choose from available appointments in the next 7 days</p>
                       
                       {availableSlots.length === 0 ? (
@@ -314,6 +318,7 @@ export default function Book() {
                                 setSelectedSlot(slot.id);
                                 form.setValue("slotId", slot.id);
                               }}
+                              data-testid="slot-button"
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-center justify-between">
@@ -382,6 +387,7 @@ export default function Book() {
                         size="lg"
                         className="flex-1"
                         disabled={!selectedSlot || !form.watch("acceptTerms")}
+                        data-testid="proceed-payment-button"
                       >
                         <CreditCard className="mr-2 h-4 w-4" />
                         Proceed to Payment - £55

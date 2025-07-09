@@ -15,8 +15,8 @@ function Hero() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Quality Healthcare{" "}
-              <span className="text-teal-600">Within 48 Hours</span>
+              Get expert women's health advice{" "}
+              <span className="text-teal-600">within 48 hours</span>
             </h1>
             <p className="text-lg text-gray-600 mb-8">
               Connect with qualified women's health specialists for private consultations. 
@@ -28,6 +28,7 @@ function Hero() {
                 size="lg"
                 onClick={() => setLocation("#doctors")}
                 className="px-8 py-4 text-base font-semibold"
+                data-testid="book-consultation-button"
               >
                 Book Consultation - £55
               </Button>
@@ -203,7 +204,7 @@ function DoctorProfiles() {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {doctorsWithRatings?.map((doctor) => (
-            <Card key={doctor.id} variant="elevated" className="hover:shadow-lg transition-shadow">
+            <Card key={doctor.id} variant="elevated" className="hover:shadow-lg transition-shadow" data-testid="doctor-card">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4 mb-4">
                   <img 
@@ -212,18 +213,18 @@ function DoctorProfiles() {
                     className="w-16 h-16 rounded-full object-cover"
                   />
                   <div>
-                    <h3 className="font-semibold text-gray-900">Dr. {doctor.specialty}</h3>
-                    <p className="text-sm text-gray-600">{doctor.specialty}</p>
+                    <h3 className="font-semibold text-gray-900" data-testid="doctor-name">Dr. {doctor.specialty}</h3>
+                    <p className="text-sm text-gray-600" data-testid="doctor-specialty">{doctor.specialty}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="flex items-center space-x-1">
                     <Star className="text-yellow-400 fill-current" size={16} />
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium" data-testid="doctor-rating">
                       {doctor.averageRating > 0 ? doctor.averageRating.toFixed(1) : "New"}
                     </span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500" data-testid="total-feedbacks">
                       ({doctor.totalFeedbacks} reviews)
                     </span>
                   </div>
@@ -231,11 +232,11 @@ function DoctorProfiles() {
 
                 <div className="flex items-center space-x-2 mb-4">
                   <GraduationCap size={16} className="text-gray-500" />
-                  <span className="text-sm text-gray-600">{doctor.qualifications}</span>
+                  <span className="text-sm text-gray-600" data-testid="doctor-qualifications">{doctor.qualifications}</span>
                 </div>
 
-                <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                  {doctor.bio || `Specialist in ${doctor.specialty} with extensive experience in women's health.`}
+                <p className="text-sm text-gray-600 mb-4 line-clamp-3" data-testid="doctor-experience">
+                  {doctor.bio || `${doctor.yearsOfExperience} years of experience in ${doctor.specialty}.`}
                 </p>
 
                 <div className="flex items-center justify-between mb-4">
@@ -250,6 +251,7 @@ function DoctorProfiles() {
                   variant="teal" 
                   className="w-full"
                   onClick={() => setLocation(`/booking/${doctor.id}`)}
+                  data-testid="book-now-button"
                 >
                   Book Consultation
                 </Button>
