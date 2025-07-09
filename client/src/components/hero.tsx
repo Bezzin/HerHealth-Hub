@@ -1,54 +1,79 @@
-import { Shield, Lock, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Clock, Star, Video } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="bg-gradient-to-br from-primary/5 to-secondary/5 py-12 lg:py-20">
-      <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Quality Healthcare{" "}
-              <span className="text-primary">Within 48 Hours</span>
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              Connect with qualified women's health specialists for private consultations. 
-              Book appointments, get expert advice, and prioritize your health—all from the comfort of your home.
+    <section className="bg-warm-gradient min-h-screen flex flex-col justify-center py-12">
+      <div className="container mx-auto px-4 max-w-6xl">
+        {/* Main headline */}
+        <div className="text-center mb-16">
+          <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl font-medium text-foreground mb-6 leading-tight">
+            You deserve better healthcare.{" "}
+            <span className="italic text-muted-foreground">Within 48 hours.</span>
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            Connect with qualified women's health specialists for private video consultations. 
+            Expert advice when you need it most.
+          </p>
+        </div>
+
+        {/* Featured consultation card */}
+        <div className="max-w-lg mx-auto mb-16">
+          <div className="bg-card rounded-3xl p-8 shadow-lg border border-border">
+            <div className="flex items-center justify-between mb-6">
+              <div className="bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-medium">
+                Most popular
+              </div>
+              <div className="flex items-center space-x-2 text-muted-foreground">
+                <Clock size={16} />
+                <span className="text-sm">20 min</span>
+              </div>
+            </div>
+            
+            <div className="relative mb-6">
+              <div className="aspect-video bg-warm-card rounded-2xl flex items-center justify-center relative overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300" 
+                  alt="Women's health specialist consultation" 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3">
+                  <Video className="text-primary" size={20} />
+                </div>
+              </div>
+            </div>
+
+            <h3 className="font-serif text-2xl font-medium text-foreground mb-3">
+              Women's Health Specialist Consultation
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Get expert advice on gynecology, fertility, menopause, and general women's health concerns from qualified specialists.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button className="bg-primary text-white px-8 py-4 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
-                Book Consultation - £55
-              </Button>
-              <Button variant="outline" className="border border-gray-300 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
-                Learn More
-              </Button>
-            </div>
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <Shield className="text-trust" size={20} />
-                <span className="text-sm text-gray-600">GDPR Compliant</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Lock className="text-trust" size={20} />
-                <span className="text-sm text-gray-600">Secure Payments</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <UserCheck className="text-trust" size={20} />
-                <span className="text-sm text-gray-600">Qualified Doctors</span>
-              </div>
-            </div>
+
+            <Button 
+              className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-2xl py-6 text-lg font-medium"
+              size="lg"
+            >
+              Book consultation - £55
+            </Button>
           </div>
-          <div className="relative">
-            <img 
-              src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" 
-              alt="Professional female doctor" 
-              className="rounded-2xl shadow-xl w-full h-auto"
-            />
-            <div className="absolute -bottom-4 -left-4 bg-white p-4 rounded-xl shadow-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-secondary rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-gray-900">Available Now</span>
-              </div>
+        </div>
+
+        {/* Trust indicators */}
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground mb-4">Trusted by thousands of women across the UK</p>
+          <div className="flex items-center justify-center space-x-8 text-muted-foreground">
+            <div className="flex items-center space-x-2">
+              <Star className="fill-yellow-400 text-yellow-400" size={16} />
+              <span className="text-sm">4.9/5 rating</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm">GDPR compliant</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm">GMC registered</span>
             </div>
           </div>
         </div>
