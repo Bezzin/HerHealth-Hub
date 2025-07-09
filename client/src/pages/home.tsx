@@ -1,20 +1,21 @@
 import Header from "@/components/header";
 import Hero from "@/components/hero";
-import HealthCategories from "@/components/health-categories";
-import SupportSection from "@/components/support-section";
-import TreatmentPromise from "@/components/treatment-promise";
+import HowItWorks from "@/components/how-it-works";
+import DoctorProfiles from "@/components/doctor-profiles";
 import TrustIndicators from "@/components/trust-indicators";
 import Footer from "@/components/footer";
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       <Hero />
-      <HealthCategories />
-      <SupportSection />
-      <TreatmentPromise />
+      <HowItWorks />
+      <DoctorProfiles />
       <TrustIndicators />
+      
+
+      
       <Footer />
     </div>
   );

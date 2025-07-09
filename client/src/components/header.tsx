@@ -1,4 +1,4 @@
-import { Heart, Menu, Calendar, User } from "lucide-react";
+import { Heart, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useState } from "react";
@@ -7,49 +7,40 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-background border-b border-border sticky top-0 z-50">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="flex items-center justify-between h-20">
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center">
-              <Heart className="text-primary-foreground" size={20} />
+    <header className="bg-white shadow-sm border-b border-gray-200">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <Heart className="text-white text-sm" size={16} />
             </div>
-            <h1 className="font-serif font-medium text-2xl text-foreground">HerHealth Hub</h1>
-          </Link>
+            <h1 className="text-xl font-bold text-gray-900">HerHealth Hub</h1>
+          </div>
           
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
-              Home
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link href="/my-bookings" className="text-gray-600 hover:text-primary transition-colors">
+              My Bookings
             </Link>
-            <Link href="/my-bookings" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
-              My appointments
-            </Link>
-            <Link href="/profile" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
+            <Link href="/profile" className="text-gray-600 hover:text-primary transition-colors">
               Profile
             </Link>
-            <Button 
-              className="bg-teal-600 text-white hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 rounded-2xl px-6 py-3 font-medium"
-              asChild
-            >
-              <Link href="/doctors">Book consultation</Link>
+            <Link href="/dashboard/doctor" className="text-gray-600 hover:text-primary transition-colors">
+              Doctor Dashboard
+            </Link>
+            <Link href="/admin" className="text-gray-600 hover:text-primary transition-colors">
+              Admin
+            </Link>
+            <Button className="bg-primary text-white hover:bg-primary/90">
+              Sign In
             </Button>
           </nav>
           
-          <div className="flex items-center space-x-4">
-            <Link href="/my-bookings" className="hidden sm:block">
-              <Calendar className="text-muted-foreground hover:text-foreground transition-colors" size={24} />
-            </Link>
-            <Link href="/profile" className="hidden sm:block">
-              <User className="text-muted-foreground hover:text-foreground transition-colors" size={24} />
-            </Link>
-            <button 
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              <Menu className="text-muted-foreground" size={24} />
-            </button>
-          </div>
+          <button 
+            className="md:hidden"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            <Menu className="text-gray-600" size={24} />
+          </button>
         </div>
       </div>
     </header>
