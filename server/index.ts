@@ -38,6 +38,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Log UI version information for development
+  const useV2UI = process.env.REACT_APP_UI_V2 === 'true';
+  if (app.get("env") === "development") {
+    log(`🎨 UI Version: ${useV2UI ? 'v2 (Enhanced)' : 'v1 (Original)'} ${useV2UI ? 'from /client_v2' : 'from /client'}`);
+  }
+
   const server = await registerRoutes(app);
 
   // Start the reminder scheduler

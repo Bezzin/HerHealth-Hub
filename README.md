@@ -52,6 +52,41 @@ A booking platform that lets UK women (18-55) get a video consult with a vetted 
 - **React Hook Form** + Zod validation
 - **Stripe Elements** for secure payments
 
+## 🎨 UI Versions
+
+The platform supports two UI versions:
+
+- **UI v1 (Original)**: Located in `/client` - Standard design with basic components
+- **UI v2 (Enhanced)**: Located in `/client_v2` - Professional healthcare branding with teal color palette, enhanced shadcn/ui components, and Stripe-level quality design
+
+### Running Different UI Versions
+
+**Option 1: Using Scripts (Recommended)**
+```bash
+# Run with Enhanced UI v2
+./scripts/dev-v2.sh
+
+# Run with Original UI v1  
+./scripts/dev-v1.sh
+
+# Run Storybook for component development
+./scripts/storybook.sh
+```
+
+**Option 2: Manual Setup**
+```bash
+# For Enhanced UI v2
+rm client && ln -sf client_v2 client
+npm run dev
+
+# For Original UI v1
+rm client && mv client_original client  # if backed up
+npm run dev
+
+# For Storybook
+cd client_v2 && npx storybook dev -p 6006
+```
+
 ## 🚀 Getting Started
 
 ### Prerequisites

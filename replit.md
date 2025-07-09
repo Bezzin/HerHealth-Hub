@@ -239,6 +239,9 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 09, 2025. Rebuilt Landing.jsx and Book.jsx in client_v2 using new teal-themed components with identical API calls and routes
 - July 09, 2025. Created complete UI v2 with enhanced doctor profiles, hero section, booking form, and Storybook stories for both pages
 - July 09, 2025. Added professional healthcare branding with trust indicators, security badges, and improved user experience flows
+- July 09, 2025. Implemented UI version switching system with shell scripts and symbolic links (dev-v2.sh, dev-v1.sh, storybook.sh)
+- July 09, 2025. Added REACT_APP_UI_V2 environment flag documentation and README instructions for switching between UI versions
+- July 09, 2025. Created .env.example with UI version selection and all required environment variables for the platform
 
 ## User Preferences
 
