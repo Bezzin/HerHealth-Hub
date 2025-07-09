@@ -50,11 +50,12 @@ export default function HealthCategories() {
               onClick={() => setLocation('/')}
             >
               <div className="relative">
-                <div className="aspect-[4/3] relative overflow-hidden">
+                <div className="aspect-[3/2] relative overflow-hidden">
                   <img 
                     src={category.image}
                     alt={category.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
                   />
                   <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-60`}></div>
                   
@@ -85,7 +86,7 @@ export default function HealthCategories() {
             onClick={() => setLocation('/')}
             variant="outline"
             size="lg"
-            className="rounded-2xl px-8 py-4 text-lg border-2 hover:bg-foreground hover:text-background transition-colors"
+            className="rounded-2xl px-8 py-4 text-lg border-2 border-teal-600 text-teal-600 hover:bg-teal-600 hover:text-white transition-colors"
           >
             Browse all specialists
           </Button>

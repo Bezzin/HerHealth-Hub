@@ -55,6 +55,7 @@ export default function SupportSection() {
                 src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400" 
                 alt="Video consultation with specialist" 
                 className="w-full h-full object-cover"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-black/20"></div>
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -92,7 +93,7 @@ export default function SupportSection() {
         <div className="text-center">
           <Button 
             size="lg"
-            className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-2xl px-12 py-6 text-lg font-medium"
+            className="bg-teal-600 text-white hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 rounded-2xl px-12 py-6 text-lg font-medium"
           >
             Start 5-min assessment
           </Button>

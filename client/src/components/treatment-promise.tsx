@@ -46,7 +46,7 @@ export default function TreatmentPromise() {
         <div className="space-y-6">
           <Button 
             size="lg"
-            className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-2xl px-12 py-6 text-lg font-medium"
+            className="bg-teal-600 text-white hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 rounded-2xl px-12 py-6 text-lg font-medium"
           >
             Start 5-min assessment
           </Button>

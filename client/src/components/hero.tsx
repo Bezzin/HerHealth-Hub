@@ -3,15 +3,15 @@ import { Clock, Star, Video } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="bg-warm-gradient min-h-screen flex flex-col justify-center py-12">
+    <section className="bg-warm-gradient min-h-screen flex flex-col justify-center py-12 mt-3">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Main headline */}
         <div className="text-center mb-16">
-          <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl font-medium text-foreground mb-6 leading-tight">
-            You deserve better healthcare.{" "}
-            <span className="italic text-muted-foreground">Within 48 hours.</span>
+          <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl font-medium text-gray-900 mb-6 leading-tight">
+            Women-centred care,{" "}
+            <span className="italic text-gray-700">without the wait.</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+          <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-8">
             Connect with qualified women's health specialists for private video consultations. 
             Expert advice when you need it most.
           </p>
@@ -36,6 +36,7 @@ export default function Hero() {
                   src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300" 
                   alt="Women's health specialist consultation" 
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3">
                   <Video className="text-primary" size={20} />
@@ -51,7 +52,7 @@ export default function Hero() {
             </p>
 
             <Button 
-              className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-2xl py-6 text-lg font-medium"
+              className="w-full bg-teal-600 text-white hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 rounded-2xl py-6 text-lg font-medium"
               size="lg"
             >
               Book consultation - £55

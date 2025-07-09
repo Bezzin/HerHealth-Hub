@@ -7,7 +7,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+    <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center space-x-3">
@@ -27,11 +27,8 @@ export default function Header() {
             <Link href="/profile" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
               Profile
             </Link>
-            <Link href="/dashboard/doctor" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
-              Doctor Dashboard
-            </Link>
             <Button 
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-2xl px-6 py-3 font-medium"
+              className="bg-teal-600 text-white hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 rounded-2xl px-6 py-3 font-medium"
               asChild
             >
               <Link href="/doctors">Book consultation</Link>
@@ -48,6 +45,7 @@ export default function Header() {
             <button 
               className="md:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
             >
               <Menu className="text-muted-foreground" size={24} />
             </button>
