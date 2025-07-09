@@ -228,6 +228,10 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 07, 2025. Added governing law clause (England & Wales jurisdiction) and professional indemnity confirmation section
 - July 07, 2025. Enhanced booking confirmation email template with emergency service disclaimer and clinician responsibility notice
 - July 07, 2025. Updated email consultation duration from 30 to 20 minutes to match platform terms
+- July 09, 2025. Converted design brief to /docs/design_principles.md with core principles TL;DR
+- July 09, 2025. Conducted comprehensive UX audit following Stripe-level design standards
+- July 09, 2025. Identified 34 friction points across patient and doctor flows with priority rankings
+- July 09, 2025. Created /docs/friction_board.md with 10 trust-breaking and 15 friction issues requiring immediate fixes
 
 ## User Preferences
 
