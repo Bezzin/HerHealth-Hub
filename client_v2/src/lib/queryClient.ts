@@ -1,21 +1,25 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    throw new Error(`HTTP ${res.status}: ${await res.text()}`);
   }
 }
 
 export async function apiRequest(
-  method: string,
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
   url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
+  body?: any
+) {
+  const headers: HeadersInit = {};
+  if (body) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
     credentials: "include",
   });
 
@@ -26,32 +30,33 @@ export async function apiRequest(
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
+}) => (ctx: { queryKey: readonly [string] }) => Promise<T> =
+  ({ on401 }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const res = await fetch(queryKey[0], {
       credentials: "include",
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    if (res.status === 401) {
+      if (on401 === "returnNull") {
+        return null;
+      } else {
+        throw new Error("Unauthorized");
+      }
     }
 
     await throwIfResNotOk(res);
-    return await res.json();
+    return res.json();
   };
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
-    },
-    mutations: {
-      retry: false,
+      queryFn: getQueryFn({ on401: "returnNull" }),
+      retry: (failureCount, error) => {
+        if (error?.message?.includes("401")) return false;
+        return failureCount < 3;
+      },
     },
   },
 });

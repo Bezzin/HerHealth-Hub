@@ -236,6 +236,9 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 09, 2025. Created client_v2 folder with shadcn/ui components and Storybook integration featuring teal color palette
 - July 09, 2025. Built enhanced Button, Card, and Navbar components with comprehensive Storybook stories and teal variants
 - July 09, 2025. Added teal color theme variants: teal, teal-outline, teal-ghost for buttons; teal, teal-dark for cards; teal, teal-light for navbar
+- July 09, 2025. Rebuilt Landing.jsx and Book.jsx in client_v2 using new teal-themed components with identical API calls and routes
+- July 09, 2025. Created complete UI v2 with enhanced doctor profiles, hero section, booking form, and Storybook stories for both pages
+- July 09, 2025. Added professional healthcare branding with trust indicators, security badges, and improved user experience flows
 
 ## User Preferences
 

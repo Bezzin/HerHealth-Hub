@@ -5,33 +5,39 @@ This is the enhanced UI version with shadcn/ui components and Storybook integrat
 ## Features
 
 - **Enhanced Components**: Button, Card, and Navbar with multiple variants
-- **Teal Color Palette**: Healthcare-focused color scheme with teal primary colors
+- **Teal Color Palette**: Healthcare-focused color scheme with teal primary colors  
 - **Storybook Integration**: Interactive component documentation and testing
 - **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Complete Pages**: Rebuilt Landing and Book pages using new teal-themed components
+- **API Integration**: Full compatibility with existing backend API calls and routes
+- **Professional UI**: Stripe-level quality design with improved trust indicators
 
-## Running Storybook
+## Running the Enhanced UI
+
+### Storybook (Component Development)
 
 From the root project directory:
-
 ```bash
-# Start Storybook development server
-npm run storybook
-
-# Build Storybook for production
-npm run build-storybook
+cd client_v2 && npx storybook dev -p 6006
 ```
 
 Or from the client_v2 directory:
-
 ```bash
-cd client_v2
-
 # Start Storybook
 npx storybook dev -p 6006
 
 # Build Storybook
 npx storybook build
 ```
+
+### Development Server
+
+To run the enhanced UI with API integration:
+```bash
+cd client_v2 && npm run dev
+```
+
+This will start the enhanced UI on port 5173 with full API connectivity to the backend running on port 5000.
 
 ## Component Variants
 
