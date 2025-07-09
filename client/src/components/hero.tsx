@@ -9,10 +9,10 @@ export default function Hero() {
           <div>
             <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-6">
               Quality Healthcare{" "}
-              <span className="text-primary">Designed for Women</span>
+              <span className="text-primary">Within 48 Hours</span>
             </h2>
             <p className="text-lg text-gray-600 mb-8">
-              Connect with qualified female doctors for private consultations. 
+              Connect with qualified women's health specialists for private consultations. 
               Book appointments, get expert advice, and prioritize your health—all from the comfort of your home.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">

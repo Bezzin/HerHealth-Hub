@@ -131,3 +131,15 @@
 
 **Total issues identified**: 34 items requiring attention
 **Critical priority** (🔴🟠): 25 items need immediate fixes
+
+## Issues Fixed
+
+✅ **Homepage admin link visible to patients** - Removed admin link from public homepage
+✅ **Missing consultation duration** - Updated all references from 30 to 20 minutes
+✅ **No booking summary** - Added comprehensive booking summary to checkout page
+✅ **Phone number confusion** - Added helper text: "Optional - for SMS appointment reminders"
+✅ **Missing urgency indicators** - Added "Within 48 Hours" to hero section
+✅ **Terms/Privacy links broken** - Updated booking form to link to proper legal pages
+✅ **Missing booking details API** - Added GET /api/bookings/:id endpoint for checkout page
+
+**Remaining critical issues**: 18 items need fixes

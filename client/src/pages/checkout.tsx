@@ -6,7 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, CreditCard } from "lucide-react";
+import { ArrowLeft, CreditCard, Shield, Lock, CheckCircle } from "lucide-react";
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
@@ -76,12 +76,42 @@ const CheckoutForm = () => {
 export default function Checkout() {
   const [, setLocation] = useLocation();
   const [clientSecret, setClientSecret] = useState("");
+  const [bookingDetails, setBookingDetails] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     // Create PaymentIntent as soon as the page loads
     const urlParams = new URLSearchParams(window.location.search);
     const bookingId = urlParams.get('bookingId');
+    const doctorId = urlParams.get('doctorId');
+    
+    if (!bookingId || !doctorId) {
+      toast({
+        title: "Error",
+        description: "Missing booking information",
+        variant: "destructive",
+      });
+      setLocation('/');
+      return;
+    }
+
+    // Fetch booking details
+    Promise.all([
+      apiRequest("GET", `/api/bookings/${bookingId}`),
+      apiRequest("GET", `/api/doctors/${doctorId}`)
+    ])
+      .then(async ([bookingRes, doctorRes]) => {
+        const booking = await bookingRes.json();
+        const doctor = await doctorRes.json();
+        setBookingDetails({ booking, doctor });
+      })
+      .catch((error) => {
+        toast({
+          title: "Error",
+          description: "Failed to load booking details",
+          variant: "destructive",
+        });
+      });
     
     apiRequest("POST", "/api/create-payment-intent", { 
       amount: 55, // £55 consultation fee
@@ -100,12 +130,12 @@ export default function Checkout() {
       });
   }, [toast]);
 
-  if (!clientSecret) {
+  if (!clientSecret || !bookingDetails) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Preparing payment...</p>
+          <p className="text-gray-600">Loading payment details...</p>
         </div>
       </div>
     );
@@ -143,7 +173,7 @@ export default function Checkout() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Duration</span>
-                    <span className="font-medium">30 minutes</span>
+                    <span className="font-medium">20 minutes</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Type</span>

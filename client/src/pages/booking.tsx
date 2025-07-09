@@ -148,7 +148,7 @@ export default function Booking() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h5 className="font-semibold text-gray-900">Consultation Fee</h5>
-                    <p className="text-sm text-gray-600">30-minute video consultation</p>
+                    <p className="text-sm text-gray-600">20-minute video consultation</p>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-gray-900">£55</p>
@@ -245,9 +245,9 @@ export default function Booking() {
                       id="phone"
                       type="tel"
                       {...form.register("phone")}
-                      placeholder="Enter your phone number for SMS reminders"
+                      placeholder="Enter your phone number"
                     />
-                    <p className="text-xs text-gray-500 mt-1">We'll send you SMS reminders 24 hours before your appointment</p>
+                    <p className="text-xs text-gray-500 mt-1">Optional - for SMS appointment reminders</p>
                     {form.formState.errors.phone && (
                       <p className="text-sm text-red-600 mt-1">{form.formState.errors.phone.message}</p>
                     )}
@@ -297,7 +297,7 @@ export default function Booking() {
                   />
                   <div className="text-sm text-gray-600">
                     <Label htmlFor="acceptTerms" className="cursor-pointer">
-                      I agree to the <a href="#" className="text-primary hover:underline">Terms & Conditions</a> and <a href="#" className="text-primary hover:underline">Privacy Policy</a>. I understand that this consultation is for informational purposes and does not replace emergency medical care.
+                      I agree to the <a href="/terms" className="text-primary hover:underline">Terms & Conditions</a> and <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>. I understand that this consultation is for informational purposes and does not replace emergency medical care.
                     </Label>
                   </div>
                 </div>
