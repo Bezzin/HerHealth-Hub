@@ -57,10 +57,20 @@ export default function Booking() {
 
   const onSubmit = async (data: BookingFormData) => {
     try {
+      // Client-side validation
       if (!selectedSlot) {
         toast({
-          title: "Error",
-          description: "Please select a time slot",
+          title: "Please select a time slot",
+          description: "Choose your preferred appointment time to continue",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!data.acceptTerms) {
+        toast({
+          title: "Terms acceptance required",
+          description: "Please accept our Terms & Conditions to proceed",
           variant: "destructive",
         });
         return;
@@ -79,12 +89,17 @@ export default function Booking() {
 
       const bookingResponse = await booking.json();
       
+      toast({
+        title: "Booking created successfully!",
+        description: "Redirecting to secure payment...",
+      });
+      
       // Navigate to checkout with booking details
       setLocation(`/checkout?bookingId=${bookingResponse.id}&doctorId=${doctorId}`);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create booking",
+        title: "Booking failed",
+        description: error.message || "Please try again or contact support",
         variant: "destructive",
       });
     }
@@ -93,7 +108,11 @@ export default function Booking() {
   if (isLoading || slotsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading doctor information...</p>
+          <p className="text-sm text-gray-500 mt-2">This should only take a moment</p>
+        </div>
       </div>
     );
   }
@@ -162,9 +181,13 @@ export default function Booking() {
                 <div>
                   <h5 className="font-semibold text-gray-900 mb-3">Available Times (Next 7 Days)</h5>
                   {!slots || slots.length === 0 ? (
-                    <p className="text-gray-600 text-center py-4">No available slots found</p>
+                    <div className="text-center py-8 bg-gray-50 rounded-xl">
+                      <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-600 font-medium">No available slots found</p>
+                      <p className="text-sm text-gray-500 mt-1">Please try another doctor or check back later</p>
+                    </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {slots.map((slot) => {
                         const date = new Date(slot.date);
                         const isToday = date.toDateString() === new Date().toDateString();
@@ -203,24 +226,26 @@ export default function Booking() {
                 {/* Patient Details */}
                 <div>
                   <h5 className="font-semibold text-gray-900 mb-3">Your Details</h5>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="firstName">First Name *</Label>
                       <Input
                         id="firstName"
                         {...form.register("firstName")}
                         placeholder="Enter your first name"
+                        className="mt-1"
                       />
                       {form.formState.errors.firstName && (
                         <p className="text-sm text-red-600 mt-1">{form.formState.errors.firstName.message}</p>
                       )}
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="lastName">Last Name *</Label>
                       <Input
                         id="lastName"
                         {...form.register("lastName")}
                         placeholder="Enter your last name"
+                        className="mt-1"
                       />
                       {form.formState.errors.lastName && (
                         <p className="text-sm text-red-600 mt-1">{form.formState.errors.lastName.message}</p>
@@ -228,12 +253,13 @@ export default function Booking() {
                     </div>
                   </div>
                   <div className="mt-4">
-                    <Label htmlFor="email">Email Address</Label>
+                    <Label htmlFor="email">Email Address *</Label>
                     <Input
                       id="email"
                       type="email"
                       {...form.register("email")}
                       placeholder="Enter your email address"
+                      className="mt-1"
                     />
                     {form.formState.errors.email && (
                       <p className="text-sm text-red-600 mt-1">{form.formState.errors.email.message}</p>
@@ -253,13 +279,15 @@ export default function Booking() {
                     )}
                   </div>
                   <div className="mt-4">
-                    <Label htmlFor="reason">Reason for Consultation</Label>
+                    <Label htmlFor="reason">Reason for Consultation *</Label>
                     <Textarea
                       id="reason"
                       {...form.register("reasonForConsultation")}
                       rows={3}
                       placeholder="Briefly describe your health concern..."
+                      className="mt-1"
                     />
+                    <p className="text-xs text-gray-500 mt-1">This helps your doctor prepare for the consultation</p>
                     {form.formState.errors.reasonForConsultation && (
                       <p className="text-sm text-red-600 mt-1">{form.formState.errors.reasonForConsultation.message}</p>
                     )}
@@ -308,12 +336,16 @@ export default function Booking() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full bg-primary text-white py-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors min-h-[56px]"
-                  disabled={form.formState.isSubmitting}
+                  className="w-full bg-primary text-white py-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors min-h-[56px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={form.formState.isSubmitting || !selectedSlot || !form.watch("acceptTerms")}
                 >
                   <div className="flex items-center justify-center space-x-2">
-                    <CreditCard size={20} />
-                    <span>Continue to Payment</span>
+                    {form.formState.isSubmitting ? (
+                      <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    ) : (
+                      <CreditCard size={20} />
+                    )}
+                    <span>{form.formState.isSubmitting ? 'Creating booking...' : 'Continue to Payment'}</span>
                   </div>
                 </Button>
 

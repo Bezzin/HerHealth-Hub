@@ -40,14 +40,18 @@ const CheckoutForm = () => {
     if (error) {
       toast({
         title: "Payment Failed",
-        description: error.message,
+        description: error.message || "Please check your card details and try again",
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Payment Successful",
-        description: "Your consultation has been booked successfully!",
+        title: "Payment Successful!",
+        description: "Your consultation has been booked. Check your email for confirmation.",
       });
+      // Redirect to success page after a short delay
+      setTimeout(() => {
+        window.location.href = '/my-bookings';
+      }, 2000);
     }
     setIsProcessing(false);
   };
@@ -66,7 +70,7 @@ const CheckoutForm = () => {
       >
         <div className="flex items-center justify-center space-x-2">
           <CreditCard size={20} />
-          <span>{isProcessing ? 'Processing...' : 'Pay £55 & Complete Booking'}</span>
+          <span>{isProcessing ? 'Processing payment...' : 'Pay £55 & Complete Booking'}</span>
         </div>
       </Button>
     </form>
@@ -194,7 +198,7 @@ export default function Checkout() {
 
               <div className="mt-6 text-center text-sm text-gray-500">
                 <p>Your payment is secured with 256-bit SSL encryption</p>
-                <p>By completing this payment, you agree to our Terms of Service</p>
+                <p>By completing this payment, you agree to our <a href="/terms" className="text-primary hover:underline">Terms of Service</a></p>
               </div>
             </CardContent>
           </Card>

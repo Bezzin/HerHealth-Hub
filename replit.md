@@ -233,6 +233,7 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 09, 2025. Identified 34 friction points across patient and doctor flows with priority rankings
 - July 09, 2025. Created /docs/friction_board.md with 10 trust-breaking and 15 friction issues requiring immediate fixes
 - July 09, 2025. Fixed 7 critical UX issues: removed admin link from homepage, corrected consultation duration to 20 minutes, added booking summary to checkout, improved phone field helper text, added 48-hour promise to hero, fixed terms/privacy links, added booking details API endpoint
+- July 09, 2025. Fixed 8 additional UX friction points: enhanced mobile responsiveness, added required field indicators, improved loading states, better error messaging, button accessibility, form validation feedback, and functional hero CTAs
 
 ## User Preferences
 

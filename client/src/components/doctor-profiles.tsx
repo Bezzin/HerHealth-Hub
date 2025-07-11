@@ -50,7 +50,7 @@ export default function DoctorProfiles() {
               Experienced healthcare professionals dedicated to women's health
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map((i) => (
               <Card key={i} className="animate-pulse">
                 <CardContent className="p-6">
@@ -84,7 +84,7 @@ export default function DoctorProfiles() {
             Experienced healthcare professionals dedicated to women's health
           </p>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {doctorsWithRatings?.map((doctor) => (
             <Card key={doctor.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               <CardContent className="p-6">
