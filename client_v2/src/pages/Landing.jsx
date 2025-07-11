@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Shield, Lock, UserCheck, Calendar, Star, GraduationCap, Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Navbar, NavbarBrand } from "@/components/ui/navbar";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Navbar, NavbarBrand } from "../components/ui/navbar";
 import { useLocation } from "wouter";
 
 // Hero Section Component
