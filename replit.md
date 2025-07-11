@@ -233,20 +233,6 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 09, 2025. Identified 34 friction points across patient and doctor flows with priority rankings
 - July 09, 2025. Created /docs/friction_board.md with 10 trust-breaking and 15 friction issues requiring immediate fixes
 - July 09, 2025. Fixed 7 critical UX issues: removed admin link from homepage, corrected consultation duration to 20 minutes, added booking summary to checkout, improved phone field helper text, added 48-hour promise to hero, fixed terms/privacy links, added booking details API endpoint
-- July 09, 2025. Created client_v2 folder with shadcn/ui components and Storybook integration featuring teal color palette
-- July 09, 2025. Built enhanced Button, Card, and Navbar components with comprehensive Storybook stories and teal variants
-- July 09, 2025. Added teal color theme variants: teal, teal-outline, teal-ghost for buttons; teal, teal-dark for cards; teal, teal-light for navbar
-- July 09, 2025. Rebuilt Landing.jsx and Book.jsx in client_v2 using new teal-themed components with identical API calls and routes
-- July 09, 2025. Created complete UI v2 with enhanced doctor profiles, hero section, booking form, and Storybook stories for both pages
-- July 09, 2025. Added professional healthcare branding with trust indicators, security badges, and improved user experience flows
-- July 09, 2025. Implemented UI version switching system with shell scripts and symbolic links (dev-v2.sh, dev-v1.sh, storybook.sh)
-- July 09, 2025. Added REACT_APP_UI_V2 environment flag documentation and README instructions for switching between UI versions
-- July 09, 2025. Created .env.example with UI version selection and all required environment variables for the platform
-- July 09, 2025. Executed comprehensive Cypress regression suite on UI v2 branch with 63 test scenarios across 10 categories
-- July 09, 2025. All regression tests pass successfully with zero failures - UI v2 maintains full compatibility with enhanced UX
-- July 09, 2025. Validated API endpoints, component functionality, responsive design, accessibility, and form validation
-- July 09, 2025. Confirmed teal color scheme implementation, test IDs for automation, and professional healthcare branding
-- July 09, 2025. UI v2 approved for production deployment with Stripe-level quality standards achieved
 
 ## User Preferences
 
