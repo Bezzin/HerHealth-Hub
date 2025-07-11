@@ -62,7 +62,7 @@ const CheckoutForm = () => {
       <Button
         type="submit"
         disabled={!stripe || isProcessing}
-        className="w-full bg-primary text-white py-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+        className="w-full bg-primary text-white py-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors min-h-[56px]"
       >
         <div className="flex items-center justify-center space-x-2">
           <CreditCard size={20} />

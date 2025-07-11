@@ -16,10 +16,10 @@ export default function Hero() {
               Book appointments, get expert advice, and prioritize your health—all from the comfort of your home.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button className="bg-primary text-white px-8 py-4 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+              <Button className="bg-primary text-white px-8 py-4 rounded-lg font-semibold hover:bg-primary/90 transition-colors min-h-[56px]">
                 Book Consultation - £55
               </Button>
-              <Button variant="outline" className="border border-gray-300 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+              <Button variant="outline" className="border border-gray-300 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors min-h-[56px]">
                 Learn More
               </Button>
             </div>

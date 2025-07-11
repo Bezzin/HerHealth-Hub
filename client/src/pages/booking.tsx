@@ -179,9 +179,9 @@ export default function Booking() {
                             key={slot.id}
                             type="button"
                             variant="outline"
-                            className={`p-3 text-left justify-start h-auto ${
+                            className={`p-4 text-left justify-start h-auto min-h-[64px] ${
                               selectedSlot === slot.id
-                                ? 'border-primary bg-primary/5'
+                                ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                                 : 'border-gray-200 hover:border-primary hover:bg-primary/5'
                             }`}
                             onClick={() => {
@@ -308,7 +308,7 @@ export default function Booking() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full bg-primary text-white py-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+                  className="w-full bg-primary text-white py-4 rounded-xl font-semibold hover:bg-primary/90 transition-colors min-h-[56px]"
                   disabled={form.formState.isSubmitting}
                 >
                   <div className="flex items-center justify-center space-x-2">

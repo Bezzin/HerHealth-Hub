@@ -124,7 +124,7 @@ export default function DoctorProfiles() {
                     <span className="text-sm text-gray-600">Available within 48h</span>
                   </div>
                   <Button 
-                    className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                    className="bg-primary text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors min-h-[44px]"
                     onClick={() => setLocation(`/booking/${doctor.id}`)}
                   >
                     Book Now
