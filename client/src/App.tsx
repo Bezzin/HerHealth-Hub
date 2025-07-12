@@ -18,6 +18,8 @@ import Terms from "@/pages/terms";
 import Privacy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 import IntakeWizard from "@/components/IntakeWizard";
+import LoadingTailor from "@/pages/loading";
+import Recommendation from "@/pages/recommendation";
 
 function Router() {
   return (
@@ -32,6 +34,8 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/questionnaire/:slotId" component={Questionnaire} />
       <Route path="/intake" component={IntakeWizard} />
+      <Route path="/loading" component={LoadingTailor} />
+      <Route path="/recommendation" component={Recommendation} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/feedback/:bookingId" component={lazy(() => import("./pages/feedback"))} />

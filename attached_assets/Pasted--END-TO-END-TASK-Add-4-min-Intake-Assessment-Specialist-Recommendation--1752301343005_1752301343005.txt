@@ -1,0 +1,89 @@
+🚀  END-TO-END TASK: Add 4-min Intake Assessment & Specialist Recommendation
+───────────────────────────────────────────────────────────────────────────
+0. Safety
+   • Create git branch intake-assessment.
+
+1. DATA  ➜  create /data/intake_questions.json with this exact array:
+[
+  {"id":"reason","q":"So, what brings you here? (select all that apply)","type":"multi","options":["Just curious","Planning for babies in the future","Experiencing symptoms","Actively trying to conceive","Thinking about egg freezing or IVF","Perimenopause concerns","Menopause advice"],"required":true},
+  {"id":"dob","q":"What’s your date of birth?","type":"date","required":true},
+  {"id":"sex_at_birth","q":"Sex assigned at birth","type":"single","options":["Female","Male","Other"],"required":true},
+  {"id":"identify_female","q":"Do you currently identify as female?","type":"single","options":["Yes","No","Prefer not to say"]},
+  {"id":"sexual_orientation","q":"Sexual orientation (select all that apply)","type":"multi","options":["Prefer not to say","Heterosexual","Lesbian","Bisexual","Asexual","Demisexual","Pansexual","Fluid","Other"]},
+  {"id":"ethnicity_group","q":"Which ethnicity group best describes you?","type":"single","options":["Asian / Asian British","Black / Black British","Indigenous / First Nations","Middle Eastern","Mixed or Other","White"]},
+  {"id":"ethnicity_specific","q":"Specific ethnicity (optional)","type":"text"},
+  {"id":"diagnoses","q":"Have you been diagnosed with any of the following reproductive-health conditions?","type":"multi","options":["None","Adenomyosis","Asherman’s syndrome","Endometriosis","Fibroids","PCOS","Premature ovarian insufficiency (POI)","Perimenopause / Menopause","Other"]},
+  {"id":"symptoms","q":"Which symptoms are you experiencing? (select all)","type":"multi","options":["None","Acne","Pelvic pain","Painful periods","Hot flushes","Hair loss","Low mood / anxiety","Night sweats","Vaginal dryness","Other"]},
+  {"id":"symptom_timing","q":"When do you experience these symptoms?","type":"single","options":["Before period","During period","After period","No pattern"],"skipIfNoSymptoms":true},
+  {"id":"stress_level","q":"How have you been feeling recently?","type":"single","options":["Calm / relaxed","Neutral","Somewhat stressed","Completely stressed / overwhelmed"]},
+  {"id":"period_start","q":"When did your most recent period start?","type":"dateOrText","placeholder":"DD/MM/YYYY or select 'I don’t remember'","allowFreeText":["I don’t remember","I have never had a period"]},
+  {"id":"cycle_regular","q":"How regular is your cycle?","type":"single","options":["Regular","Irregular","Not currently getting periods","I’ve never had a period"]},
+  {"id":"contraception","q":"Current contraception (select all that apply)","type":"multi","options":["None","Combined pill","Progesterone-only pill","IUD / Coil","Implant","Condoms","Natural methods","Other"]},
+  {"id":"medications","q":"What (other) medication(s) are you currently taking?","type":"multi","options":["None","HRT","Thyroid medication","SSRIs","Pain relief","Other"]},
+  {"id":"ever_pregnant","q":"Have you ever been pregnant?","type":"single","options":["Yes – I have children","Yes – but no children","No"]},
+  {"id":"breastfeeding","q":"Are you currently breastfeeding?","type":"single","options":["Yes","No"],"conditionalOn":{"id":"ever_pregnant","value":["Yes – I have children","Yes – but no children"]}},
+  {"id":"sti_history","q":"Have you ever been treated for an STI?","type":"multi","options":["None / I don’t know","Chlamydia","Genital herpes","HPV","Gonorrhoea","Syphilis","Other"]},
+  {"id":"height","q":"Height (cm)","type":"number"},
+  {"id":"weight","q":"Weight (kg)","type":"number"},
+  {"id":"lifestyle_exercise","q":"How often do you exercise?","type":"single","options":["Never","1–2× / week","3–6× / week","Every day","More than once a day"]},
+  {"id":"appointment_goal","q":"What’s the #1 thing you hope to get out of this appointment?","type":"single","options":["More information about my hormones","A diagnosis","Answers about fertility","Help with symptoms"]}
+]
+
+2. RECOMMENDATION ENGINE ➜ /utils/recommendationEngine.ts
+function getSpecialty(answers):
+  • If reason includes 'Menopause' → 'Menopause Specialist'
+  • If reason includes 'Perimenopause' → 'Perimenopause Specialist'
+  • If reason matches /(Fertility|conceive)/i → 'Fertility Specialist'
+  • If reason includes 'PCOS' OR diagnoses includes 'PCOS' → 'Endocrine Gynaecologist'
+  • If reason includes 'Experiencing symptoms' AND (diagnoses has 'Endometriosis' OR symptoms has pelvic/pain strings) → 'Endometriosis Specialist'
+  • else → 'Women’s Health GP'
+
+3. BACKEND:
+• POST /api/intake
+   – Accept { answers }
+   – Save (userId or guestId cookie) in Intake table
+   – const specialty = getSpecialty(answers)
+   – return { intakeId, specialty }
+• GET /api/doctors?specialty=
+   – If ?specialty passed, case-insensitive filter; else all
+• Seed doctors:
+   If Doctors count == 0 insert:
+     Dr Emma Repro  | Fertility Specialist
+     Dr Grace Meno  | Menopause Specialist
+     Dr Sarah Endo  | Endometriosis Specialist
+     Dr Olivia GP   | Women’s Health GP
+   (simple avatars placeholder links)
+
+4. FRONT-END:
+a. Intake wizard
+   • Route            /intake
+   • Component        /client/src/IntakeWizard.jsx
+   • Loads questions JSON, 4-step progress bar, required validation
+   • On submit -> navigate to /loading with answers in location.state
+b. Loading screen
+   • Route            /loading
+   • Component        LoadingTailor.jsx
+   • Full-screen hero background + text “Hold tight while we tailor your consult”
+   • Simulated 3-sec progress bar; meanwhile POST answers to /api/intake
+   • After resolve, redirect to /recommendation?specialty=<slug>
+c. Recommendation page
+   • Route            /recommendation
+   • Component        Recommendation.jsx
+   • Fetch /api/doctors?specialty=xyz
+   • Heading “Based on your answers, we recommend a {{specialty}}”
+   • Display DoctorCard list (reuse existing component)
+   • If list empty show fallback all doctors
+d. Landing hero
+   • Add secondary button “Start 4-min Assessment” linking to /intake (mobile & desktop)
+
+5. DOCTOR VIEW (bonus)
+   • In doctor booking detail, show a collapsible “Patient Intake Summary” with JSON answers prettified (optional).
+
+6. QA script
+   • Run site
+   • Complete /intake with “Menopause symptoms” -> loading -> recommendation -> Dr Grace Meno card only
+   • Book consult, pay (Stripe test), booking succeeds
+   • Provide summary PASS/FAIL
+
+Leave all other routes, DB models, payments unchanged.
+───────────────────────────────────────────────────────────────────────────

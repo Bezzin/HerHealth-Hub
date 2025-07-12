@@ -17,6 +17,26 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Recommendation engine function
+function getSpecialtyRecommendation(answers: any): string {
+  const reason = Array.isArray(answers.reason) ? answers.reason.join(' ').toLowerCase() : '';
+  const diagnoses = Array.isArray(answers.diagnoses) ? answers.diagnoses.join(' ').toLowerCase() : '';
+  const symptoms = Array.isArray(answers.symptoms) ? answers.symptoms.join(' ').toLowerCase() : '';
+
+  // Priority order matching
+  if (reason.includes('menopause')) return 'Menopause Specialist';
+  if (reason.includes('perimenopause')) return 'Perimenopause Specialist';
+  if (/(fertility|conceive)/i.test(reason)) return 'Fertility Specialist';
+  if (reason.includes('pcos') || diagnoses.includes('pcos')) return 'Endocrine Gynaecologist';
+  if (reason.includes('experiencing symptoms') && (
+    diagnoses.includes('endometriosis') || 
+    symptoms.includes('pelvic') || 
+    symptoms.includes('pain')
+  )) return 'Endometriosis Specialist';
+  
+  return 'Women\'s Health GP';
+}
+
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.diskStorage({
@@ -933,15 +953,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store intake answers (for now just log them, can extend to save to database)
       console.log('Intake assessment submitted:', answers);
       
-      // Return success response
+      // Determine specialty based on answers
+      const specialty = getSpecialtyRecommendation(answers);
+      
+      // Return success response with specialty
       res.json({ 
         success: true, 
+        intakeId: Date.now(), // Simple ID for now
+        specialty,
         message: "Assessment completed successfully",
         timestamp: new Date().toISOString()
       });
     } catch (error: any) {
       console.error('Intake submission error:', error);
       res.status(500).json({ error: "Failed to process assessment" });
+    }
+  });
+
+  // Override the existing doctors endpoint to add specialty filtering
+  app.get("/api/doctors", async (req, res) => {
+    try {
+      const { specialty } = req.query;
+      let doctors = await storage.getAllDoctorProfiles();
+      
+      // Filter by specialty if provided
+      if (specialty) {
+        const specialtyLower = (specialty as string).toLowerCase();
+        doctors = doctors.filter(doctor => 
+          doctor.specialty.toLowerCase().includes(specialtyLower) ||
+          doctor.specialty.toLowerCase() === specialtyLower
+        );
+      }
+      
+      res.json(doctors);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching doctors: " + error.message });
     }
   });
 

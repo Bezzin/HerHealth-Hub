@@ -118,11 +118,14 @@ export default function IntakeWizard() {
 
     setIsSubmitting(true);
     try {
-      await apiRequest('POST', '/api/intake', { answers });
+      // Store answers in sessionStorage for the loading page
+      sessionStorage.setItem('intakeAnswers', JSON.stringify(answers));
+      
       toast({
         title: "Assessment completed!",
         description: "Redirecting to results...",
       });
+      
       setLocation('/loading');
     } catch (error: any) {
       toast({

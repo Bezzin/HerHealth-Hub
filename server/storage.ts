@@ -107,31 +107,49 @@ export class MemStorage implements IStorage {
     // Create doctor profiles
     const profile1 = await this.createDoctorProfile({
       userId: doctor1.id,
-      specialty: "General Practice",
-      qualifications: "MB ChB, MRCGP",
-      experience: "8 years experience",
-      bio: "Specializing in women's health and general practice with a focus on preventive care.",
+      specialty: "Fertility Specialist",
+      qualifications: "MBBS, MRCOG, MSc Reproductive Medicine",
+      experience: "10 years in fertility and reproductive endocrinology",
+      bio: "Dr. Emma Repro specializes in fertility treatments, IVF, and reproductive health for women planning families.",
       profileImage: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
       indemnityConfirmed: true,
     });
 
     const profile2 = await this.createDoctorProfile({
       userId: doctor2.id,
-      specialty: "Women's Health",
-      qualifications: "MD, FACOG",
-      experience: "12 years experience",
-      bio: "Board-certified gynecologist specializing in reproductive health and hormonal disorders.",
+      specialty: "Menopause Specialist",
+      qualifications: "MBBS, FRCOG, Diploma in Menopause Care",
+      experience: "15 years in menopause and hormone therapy",
+      bio: "Dr. Grace Meno is an expert in menopause management, hormone replacement therapy, and supporting women through life transitions.",
       profileImage: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
       indemnityConfirmed: true,
     });
 
     const profile3 = await this.createDoctorProfile({
       userId: doctor3.id,
-      specialty: "Mental Health",
-      qualifications: "PhD, LMFT",
-      experience: "15 years experience",
-      bio: "Licensed therapist specializing in women's mental health and wellness.",
+      specialty: "Endometriosis Specialist",
+      qualifications: "MBBS, FRCOG, Advanced Laparoscopic Surgery",
+      experience: "12 years specializing in endometriosis and pelvic pain",
+      bio: "Dr. Sarah Endo focuses on endometriosis diagnosis, treatment, and surgical management for complex cases.",
       profileImage: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
+      indemnityConfirmed: true,
+    });
+
+    // Add fourth doctor
+    const doctor4 = await this.createUser({
+      email: "olivia.gp@herhealth.com",
+      firstName: "Olivia",
+      lastName: "GP",
+      isDoctor: true,
+    });
+
+    const profile4 = await this.createDoctorProfile({
+      userId: doctor4.id,
+      specialty: "Women's Health GP",
+      qualifications: "MBBS, MRCGP, Diploma Women's Health",
+      experience: "8 years in comprehensive women's healthcare",
+      bio: "Dr. Olivia GP provides holistic women's health care, from routine check-ups to complex health concerns.",
+      profileImage: "https://images.unsplash.com/photo-1594824720379-e0aaf9cd4659?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
       indemnityConfirmed: true,
     });
 
@@ -162,6 +180,13 @@ export class MemStorage implements IStorage {
         
         await this.createSlot({
           doctorId: profile3.id,
+          date: dateStr,
+          time,
+          isAvailable: true,
+        });
+        
+        await this.createSlot({
+          doctorId: profile4.id,
           date: dateStr,
           time,
           isAvailable: true,
