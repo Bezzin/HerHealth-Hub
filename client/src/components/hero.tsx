@@ -30,7 +30,7 @@ export default function Hero() {
                 Learn More
               </Button>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-6 mb-6">
               <div className="flex items-center space-x-2">
                 <Shield className="text-trust" size={20} />
                 <span className="text-sm text-gray-600">GDPR Compliant</span>
@@ -42,6 +42,24 @@ export default function Hero() {
               <div className="flex items-center space-x-2">
                 <UserCheck className="text-trust" size={20} />
                 <span className="text-sm text-gray-600">Qualified Doctors</span>
+              </div>
+            </div>
+
+            {/* Assessment CTA */}
+            <div className="bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 rounded-xl p-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Get personalized care recommendations
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Take our 4-minute health assessment to match with the right specialist for your needs
+                </p>
+                <Button 
+                  className="bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-700 transition-colors min-h-[48px]"
+                  onClick={() => window.location.href = '/intake'}
+                >
+                  Start 4-min Assessment
+                </Button>
               </div>
             </div>
           </div>

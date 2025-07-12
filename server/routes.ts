@@ -921,6 +921,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Intake assessment endpoint
+  app.post("/api/intake", async (req, res) => {
+    try {
+      const { answers } = req.body;
+      
+      if (!answers || typeof answers !== 'object') {
+        return res.status(400).json({ error: "Invalid intake answers format" });
+      }
+
+      // Store intake answers (for now just log them, can extend to save to database)
+      console.log('Intake assessment submitted:', answers);
+      
+      // Return success response
+      res.json({ 
+        success: true, 
+        message: "Assessment completed successfully",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('Intake submission error:', error);
+      res.status(500).json({ error: "Failed to process assessment" });
+    }
+  });
+
   // Attach notification function to app for use in routes
   (app as any).notifyDoctorOfNewBooking = notifyDoctorOfNewBooking;
 

@@ -1,0 +1,161 @@
+[
+  {
+    "id": "symptoms",
+    "title": "Current Symptoms",
+    "subtitle": "Tell us about what you're experiencing",
+    "questions": [
+      {
+        "id": "primary_concern",
+        "type": "select",
+        "label": "What is your primary concern today?",
+        "required": true,
+        "options": [
+          "Irregular periods",
+          "Heavy bleeding",
+          "Painful periods",
+          "Fertility concerns",
+          "Menopause symptoms",
+          "PCOS/hormonal issues",
+          "Contraception advice",
+          "Other"
+        ]
+      },
+      {
+        "id": "symptom_duration",
+        "type": "select",
+        "label": "How long have you been experiencing this?",
+        "required": true,
+        "options": [
+          "Less than 1 month",
+          "1-3 months",
+          "3-6 months",
+          "6-12 months",
+          "More than 1 year"
+        ]
+      },
+      {
+        "id": "pain_level",
+        "type": "select",
+        "label": "Rate your current pain/discomfort level",
+        "required": false,
+        "options": [
+          "No pain (0/10)",
+          "Mild (1-3/10)",
+          "Moderate (4-6/10)",
+          "Severe (7-10/10)"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "medical_history",
+    "title": "Medical History",
+    "subtitle": "Help us understand your background",
+    "questions": [
+      {
+        "id": "previous_pregnancies",
+        "type": "select",
+        "label": "Have you been pregnant before?",
+        "required": true,
+        "options": [
+          "Never pregnant",
+          "1 pregnancy",
+          "2-3 pregnancies",
+          "4+ pregnancies"
+        ]
+      },
+      {
+        "id": "current_medications",
+        "type": "textarea",
+        "label": "List any medications you're currently taking",
+        "required": false,
+        "placeholder": "Include birth control, supplements, etc."
+      },
+      {
+        "id": "allergies",
+        "type": "textarea",
+        "label": "Do you have any known allergies?",
+        "required": false,
+        "placeholder": "Medications, foods, environmental allergies"
+      }
+    ]
+  },
+  {
+    "id": "lifestyle",
+    "title": "Lifestyle & Preferences",
+    "subtitle": "This helps us provide personalized advice",
+    "questions": [
+      {
+        "id": "exercise_frequency",
+        "type": "select",
+        "label": "How often do you exercise?",
+        "required": false,
+        "options": [
+          "Rarely/Never",
+          "1-2 times per week",
+          "3-4 times per week",
+          "5+ times per week"
+        ]
+      },
+      {
+        "id": "stress_level",
+        "type": "select",
+        "label": "How would you rate your current stress level?",
+        "required": false,
+        "options": [
+          "Low stress",
+          "Moderate stress",
+          "High stress",
+          "Very high stress"
+        ]
+      },
+      {
+        "id": "consultation_goals",
+        "type": "textarea",
+        "label": "What do you hope to achieve from this consultation?",
+        "required": true,
+        "placeholder": "Describe your main goals and expectations"
+      }
+    ]
+  },
+  {
+    "id": "contact",
+    "title": "Contact Information",
+    "subtitle": "We'll use this to connect you with a specialist",
+    "questions": [
+      {
+        "id": "full_name",
+        "type": "text",
+        "label": "Full Name",
+        "required": true,
+        "placeholder": "Enter your full name"
+      },
+      {
+        "id": "email",
+        "type": "email",
+        "label": "Email Address",
+        "required": true,
+        "placeholder": "your.email@example.com"
+      },
+      {
+        "id": "phone",
+        "type": "tel",
+        "label": "Phone Number",
+        "required": true,
+        "placeholder": "+44 7XXX XXXXXX"
+      },
+      {
+        "id": "age",
+        "type": "select",
+        "label": "Age Range",
+        "required": true,
+        "options": [
+          "18-25",
+          "26-35",
+          "36-45",
+          "46-55"
+        ]
+      }
+    ]
+  }
+]
