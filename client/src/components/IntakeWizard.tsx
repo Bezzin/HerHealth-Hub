@@ -42,25 +42,47 @@ export default function IntakeWizard() {
   const totalSteps = 4;
 
   useEffect(() => {
-    // Load intake questions and organize into 4 logical steps
-    fetch('/data/intake_questions.json')
-      .then(response => response.json())
-      .then(data => {
-        const questionsWithSteps = data.map((q: Question, index: number) => ({
-          ...q,
-          step: Math.floor(index / 6) + 1 > 4 ? 4 : Math.floor(index / 6) + 1
-        }));
-        setQuestions(questionsWithSteps);
-        setIsLoading(false);
-      })
-      .catch(error => {
-        console.error('Failed to load intake questions:', error);
-        toast({
-          title: "Error loading questions",
-          description: "Please try refreshing the page",
-          variant: "destructive",
-        });
+    // Load intake questions using inline data
+    try {
+      const data = [
+        {"id":"reason","q":"So, what brings you here? (select all that apply)","type":"multi","options":["Just curious","Planning for babies in the future","Experiencing symptoms","Actively trying to conceive","Thinking about egg freezing or IVF","Perimenopause concerns","Menopause advice"],"required":true},
+        {"id":"dob","q":"What's your date of birth?","type":"date","required":true},
+        {"id":"sex_at_birth","q":"Sex assigned at birth","type":"single","options":["Female","Male","Other"],"required":true},
+        {"id":"identify_female","q":"Do you currently identify as female?","type":"single","options":["Yes","No","Prefer not to say"]},
+        {"id":"sexual_orientation","q":"Sexual orientation (select all that apply)","type":"multi","options":["Prefer not to say","Heterosexual","Lesbian","Bisexual","Asexual","Demisexual","Pansexual","Fluid","Other"]},
+        {"id":"ethnicity_group","q":"Which ethnicity group best describes you?","type":"single","options":["Asian / Asian British","Black / Black British","Indigenous / First Nations","Middle Eastern","Mixed or Other","White"]},
+        {"id":"ethnicity_specific","q":"Specific ethnicity (optional)","type":"text"},
+        {"id":"diagnoses","q":"Have you been diagnosed with any of the following reproductive-health conditions?","type":"multi","options":["None","Adenomyosis","Asherman's syndrome","Endometriosis","Fibroids","PCOS","Premature ovarian insufficiency (POI)","Perimenopause / Menopause","Other"]},
+        {"id":"symptoms","q":"Which symptoms are you experiencing? (select all)","type":"multi","options":["None","Acne","Pelvic pain","Painful periods","Hot flushes","Hair loss","Low mood / anxiety","Night sweats","Vaginal dryness","Other"]},
+        {"id":"symptom_timing","q":"When do you experience these symptoms?","type":"single","options":["Before period","During period","After period","No pattern"],"skipIfNoSymptoms":true},
+        {"id":"stress_level","q":"How have you been feeling recently?","type":"single","options":["Calm / relaxed","Neutral","Somewhat stressed","Completely stressed / overwhelmed"]},
+        {"id":"period_start","q":"When did your most recent period start?","type":"dateOrText","placeholder":"DD/MM/YYYY or select 'I don't remember'","allowFreeText":["I don't remember","I have never had a period"]},
+        {"id":"cycle_regular","q":"How regular is your cycle?","type":"single","options":["Regular","Irregular","Not currently getting periods","I've never had a period"]},
+        {"id":"contraception","q":"Current contraception (select all that apply)","type":"multi","options":["None","Combined pill","Progesterone-only pill","IUD / Coil","Implant","Condoms","Natural methods","Other"]},
+        {"id":"medications","q":"What (other) medication(s) are you currently taking?","type":"multi","options":["None","HRT","Thyroid medication","SSRIs","Pain relief","Other"]},
+        {"id":"ever_pregnant","q":"Have you ever been pregnant?","type":"single","options":["Yes – I have children","Yes – but no children","No"]},
+        {"id":"breastfeeding","q":"Are you currently breastfeeding?","type":"single","options":["Yes","No"],"conditionalOn":{"id":"ever_pregnant","value":["Yes – I have children","Yes – but no children"]}},
+        {"id":"sti_history","q":"Have you ever been treated for an STI?","type":"multi","options":["None / I don't know","Chlamydia","Genital herpes","HPV","Gonorrhoea","Syphilis","Other"]},
+        {"id":"height","q":"Height (cm)","type":"number"},
+        {"id":"weight","q":"Weight (kg)","type":"number"},
+        {"id":"lifestyle_exercise","q":"How often do you exercise?","type":"single","options":["Never","1–2× / week","3–6× / week","Every day","More than once a day"]},
+        {"id":"appointment_goal","q":"What's the #1 thing you hope to get out of this appointment?","type":"single","options":["More information about my hormones","A diagnosis","Answers about fertility","Help with symptoms"]}
+      ];
+      
+      const questionsWithSteps = data.map((q: Question, index: number) => ({
+        ...q,
+        step: Math.floor(index / 6) + 1 > 4 ? 4 : Math.floor(index / 6) + 1
+      }));
+      setQuestions(questionsWithSteps);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Failed to load intake questions:', error);
+      toast({
+        title: "Error loading questions",
+        description: "Please try refreshing the page",
+        variant: "destructive",
       });
+    }
   }, [toast]);
 
   const getCurrentStepQuestions = () => {
