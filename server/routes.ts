@@ -8,7 +8,7 @@ import fs from "fs/promises";
 import { storage } from "./storage";
 import { generateSymptomSummary, analyzeIntakeAssessment } from "./ai-service";
 import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema, insertFeedbackSchema } from "@shared/schema";
-import { sendBookingConfirmation, sendRescheduleConfirmation, sendCancellationConfirmation, sendFeedbackRequest } from "./notifications";
+import { sendBookingConfirmation, sendRescheduleConfirmation, sendCancellationConfirmation, sendFeedbackRequest, sendDoctorInviteEmail } from "./notifications";
 import { randomBytes } from "crypto";
 import { setupLinkedInAuth } from "./linkedin-auth";
 
@@ -665,11 +665,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt,
       });
 
-      // In production, you'd send an email with the invite link
+      // Send invite email
+      await sendDoctorInviteEmail(email, token);
+      
       const inviteUrl = `${req.protocol}://${req.get('host')}/invite/${token}`;
       
       res.json({ 
-        message: "Invite created successfully",
+        message: "Invite created and email sent successfully",
         inviteUrl, // For demo purposes, return the URL
         token: token // For demo purposes
       });

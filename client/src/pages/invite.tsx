@@ -45,9 +45,19 @@ const specialties = [
   "Endocrinologist",
 ];
 
-const timeSlots = [
-  "09:00", "10:30", "14:00", "15:30"
-];
+// Generate time slots every 15 minutes from 6 AM to 10 PM
+const generateTimeSlots = () => {
+  const slots = [];
+  for (let hour = 6; hour <= 22; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      slots.push(timeString);
+    }
+  }
+  return slots;
+};
+
+const timeSlots = generateTimeSlots();
 
 export default function Invite() {
   const [, params] = useRoute("/invite/:token");
@@ -525,7 +535,7 @@ export default function Invite() {
                                 </Button>
                               </div>
                             </div>
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-1 max-h-48 overflow-y-auto p-1">
                               {timeSlots.map((time) => {
                                 const isSelected = selectedSlots.some(slot => 
                                   slot.date === date.value && slot.time === time
@@ -536,9 +546,9 @@ export default function Invite() {
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    className={`h-8 text-xs ${
+                                    className={`h-8 text-xs px-2 ${
                                       isSelected 
-                                        ? 'bg-primary text-white border-primary' 
+                                        ? 'bg-primary text-white border-primary hover:bg-primary/90' 
                                         : 'hover:bg-primary/10'
                                     }`}
                                     onClick={() => toggleSlot(date.value, time)}

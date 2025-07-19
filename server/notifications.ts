@@ -378,6 +378,59 @@ export async function sendCancellationConfirmation(details: BookingDetails): Pro
   }
 }
 
+// Send doctor invite email
+export async function sendDoctorInviteEmail(email: string, inviteToken: string): Promise<void> {
+  if (!resend) {
+    console.log('⚠️  Resend not configured - skipping doctor invite email');
+    return;
+  }
+
+  const inviteUrl = `${process.env.APP_URL || 'http://localhost:5000'}/invite/${inviteToken}`;
+  
+  try {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891b2;">Welcome to HerHealth Hub</h2>
+        
+        <p>Dear Doctor,</p>
+        
+        <p>You've been invited to join HerHealth Hub as a specialist healthcare provider. We're building a platform that connects women with qualified specialists for convenient video consultations.</p>
+        
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #0891b2;">Why Join HerHealth Hub?</h3>
+          <ul style="color: #374151;">
+            <li>Earn £35 per 20-minute consultation</li>
+            <li>Set your own schedule with flexible time slots</li>
+            <li>Help women access specialist care within 48 hours</li>
+            <li>All consultations via secure video platform</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${inviteUrl}" style="background: #0891b2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
+            Complete Your Registration
+          </a>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px;">This invitation link will expire in 7 days. If you have any questions, please contact us at doctors@herhealth.com</p>
+        
+        <p>Best regards,<br>The HerHealth Hub Team</p>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: 'HerHealth Hub <invites@herhealth.com>',
+      to: [email],
+      subject: 'Invitation to Join HerHealth Hub as a Specialist',
+      html,
+    });
+    
+    console.log(`✅ Doctor invite email sent to ${email}`);
+  } catch (error) {
+    console.error('❌ Error sending doctor invite email:', error);
+  }
+}
+
 // Send SMS reminder to patient
 // Send post-consultation feedback email
 export async function sendFeedbackRequest(details: BookingDetails): Promise<void> {
