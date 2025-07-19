@@ -20,11 +20,15 @@ import NotFound from "@/pages/not-found";
 import IntakeWizard from "@/components/IntakeWizard";
 import LoadingTailor from "@/pages/loading";
 import Recommendation from "@/pages/recommendation";
+import Login from "@/pages/login";
+import Signup from "@/pages/signup";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
       <Route path="/booking/:doctorId" component={Booking} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/invite/:token" component={Invite} />

@@ -1,13 +1,16 @@
 import { Heart, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [, navigate] = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
   
-  // Mock user data - in production this would come from auth context
-  const userRole = null; // Can be 'patient', 'doctor', 'admin', or null
+  // Determine user role
+  const userRole = user?.isDoctor ? 'doctor' : (user ? 'patient' : null);
 
   const renderNavItems = () => {
     // Always show home
@@ -42,15 +45,24 @@ export default function Header() {
     }
 
     // Show sign in/out based on auth status
-    if (!userRole) {
+    if (!isAuthenticated) {
       items.push(
-        <Button key="signin" className="bg-primary text-white hover:bg-primary/90">
+        <Button 
+          key="signin" 
+          className="bg-primary text-white hover:bg-primary/90"
+          onClick={() => navigate("/login")}
+        >
           Sign In
         </Button>
       );
     } else {
       items.push(
-        <Button key="signout" variant="outline" className="text-gray-600">
+        <Button 
+          key="signout" 
+          variant="outline" 
+          className="text-gray-600"
+          onClick={() => logout()}
+        >
           Sign Out
         </Button>
       );

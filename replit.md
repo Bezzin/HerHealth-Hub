@@ -256,6 +256,11 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 19, 2025. Implemented role-based navigation showing/hiding menu items based on user type (patient, doctor, admin)
 - July 19, 2025. Expanded doctor availability slots from 4 per day to 65 slots (every 15 minutes from 6AM to 10PM)
 - July 19, 2025. Added bulk slot selection features with improved UI grid layout and scrollable time slot selector
+- July 19, 2025. Completed database migration from SQLite to PostgreSQL with Drizzle ORM configuration
+- July 19, 2025. Implemented JWT-based authentication system with bcrypt password hashing for secure user management
+- July 19, 2025. Created login and signup pages with form validation and JWT token management
+- July 19, 2025. Updated authentication flow with useAuth hook for managing user state across the application
+- July 19, 2025. Added Authorization header support to all API requests for authenticated endpoints
 
 ## User Preferences
 

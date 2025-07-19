@@ -1,4 +1,7 @@
 import { users, doctorProfiles, slots, bookings, doctorInvites, feedbacks, type User, type InsertUser, type DoctorProfile, type InsertDoctorProfile, type Slot, type InsertSlot, type Booking, type InsertBooking, type DoctorInvite, type InsertDoctorInvite, type Feedback, type InsertFeedback } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, gte, sql, desc } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // User operations
@@ -7,6 +10,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateStripeCustomerId(userId: number, stripeCustomerId: string): Promise<User>;
   updateMedicalHistoryUrl(userId: number, url: string): Promise<User>;
+  verifyPassword(email: string, password: string): Promise<User | undefined>;
 
   // Doctor operations
   getDoctorProfile(id: number): Promise<DoctorProfile | undefined>;
@@ -53,44 +57,25 @@ export interface IStorage {
   getIntakeAssessment(id: number): Promise<any | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private doctorProfiles: Map<number, DoctorProfile>;
-  private slots: Map<number, Slot>;
-  private bookings: Map<number, Booking>;
-  private doctorInvites: Map<number, DoctorInvite>;
-  private feedbacks: Map<number, Feedback>;
-  private intakeAssessments: Map<number, any>;
-  private currentUserId: number;
-  private currentDoctorId: number;
-  private currentSlotId: number;
-  private currentBookingId: number;
-  private currentInviteId: number;
-  private currentFeedbackId: number;
-
+export class DatabaseStorage implements IStorage {
   constructor() {
-    this.users = new Map();
-    this.doctorProfiles = new Map();
-    this.slots = new Map();
-    this.bookings = new Map();
-    this.doctorInvites = new Map();
-    this.feedbacks = new Map();
-    this.intakeAssessments = new Map();
-    this.currentUserId = 1;
-    this.currentDoctorId = 1;
-    this.currentSlotId = 1;
-    this.currentBookingId = 1;
-    this.currentInviteId = 1;
-    this.currentFeedbackId = 1;
-    
-    // Seed with sample doctors and slots
-    this.seedDoctors();
+    // Initialize database if needed
+    this.init();
+  }
+
+  private async init() {
+    // Check if we have doctors, if not seed them
+    const doctorCount = await db.select({ count: sql<number>`count(*)` }).from(doctorProfiles);
+    if (doctorCount[0].count === 0) {
+      await this.seedDoctors();
+    }
   }
 
   private async seedDoctors() {
-    // Create sample doctors
+    // Create sample doctors with passwords
     const doctor1 = await this.createUser({
       email: "sarah.johnson@herhealth.com",
+      password: "password123", // In production, this would be properly hashed
       firstName: "Sarah",
       lastName: "Johnson",
       isDoctor: true,
@@ -208,146 +193,143 @@ export class MemStorage implements IStorage {
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = {
-      ...insertUser,
-      id,
-      isDoctor: insertUser.isDoctor ?? false,
-      stripeCustomerId: null,
-      medicalHistoryUrl: null,
-      createdAt: new Date(),
-    };
-    this.users.set(id, user);
+    // Hash password if provided
+    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertUser,
+        password: hashedPassword,
+      })
+      .returning();
+    return user;
+  }
+
+  async verifyPassword(email: string, password: string): Promise<User | undefined> {
+    const user = await this.getUserByEmail(email);
+    if (!user) return undefined;
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) return undefined;
+
     return user;
   }
 
   async updateStripeCustomerId(userId: number, stripeCustomerId: string): Promise<User> {
-    const user = this.users.get(userId);
+    const [user] = await db
+      .update(users)
+      .set({ stripeCustomerId })
+      .where(eq(users.id, userId))
+      .returning();
     if (!user) throw new Error("User not found");
-    
-    const updatedUser = { ...user, stripeCustomerId };
-    this.users.set(userId, updatedUser);
-    return updatedUser;
+    return user;
   }
 
   async updateMedicalHistoryUrl(userId: number, url: string): Promise<User> {
-    const user = this.users.get(userId);
+    const [user] = await db
+      .update(users)
+      .set({ medicalHistoryUrl: url })
+      .where(eq(users.id, userId))
+      .returning();
     if (!user) throw new Error("User not found");
-    
-    const updatedUser = { ...user, medicalHistoryUrl: url };
-    this.users.set(userId, updatedUser);
-    return updatedUser;
+    return user;
   }
 
   async getDoctorProfile(id: number): Promise<DoctorProfile | undefined> {
-    return this.doctorProfiles.get(id);
+    const [profile] = await db.select().from(doctorProfiles).where(eq(doctorProfiles.id, id));
+    return profile;
   }
 
   async getDoctorProfileByUserId(userId: number): Promise<DoctorProfile | undefined> {
-    return Array.from(this.doctorProfiles.values()).find(profile => profile.userId === userId);
+    const [profile] = await db.select().from(doctorProfiles).where(eq(doctorProfiles.userId, userId));
+    return profile;
   }
 
   async getAllDoctorProfiles(): Promise<DoctorProfile[]> {
-    return Array.from(this.doctorProfiles.values());
+    return await db.select().from(doctorProfiles);
   }
 
   async createDoctorProfile(insertProfile: InsertDoctorProfile): Promise<DoctorProfile> {
-    const id = this.currentDoctorId++;
-    const profile: DoctorProfile = {
-      ...insertProfile,
-      id,
-      bio: insertProfile.bio ?? null,
-      profileImage: insertProfile.profileImage ?? null,
-      rating: "4.9",
-      reviewCount: Math.floor(Math.random() * 200) + 50,
-      availability: "Available today",
-      stripeAccountId: null,
-      indemnityConfirmed: insertProfile.indemnityConfirmed ?? false,
-    };
-    this.doctorProfiles.set(id, profile);
+    const [profile] = await db
+      .insert(doctorProfiles)
+      .values(insertProfile)
+      .returning();
     return profile;
   }
 
   async updateDoctorStripeAccount(doctorId: number, stripeAccountId: string): Promise<DoctorProfile> {
-    const profile = this.doctorProfiles.get(doctorId);
+    const [profile] = await db
+      .update(doctorProfiles)
+      .set({ stripeAccountId })
+      .where(eq(doctorProfiles.id, doctorId))
+      .returning();
     if (!profile) throw new Error("Doctor profile not found");
-    
-    const updatedProfile = { ...profile, stripeAccountId };
-    this.doctorProfiles.set(doctorId, updatedProfile);
-    return updatedProfile;
+    return profile;
   }
 
   async getSlot(id: number): Promise<Slot | undefined> {
-    return this.slots.get(id);
+    const [slot] = await db.select().from(slots).where(eq(slots.id, id));
+    return slot;
   }
 
   async getSlotsByDoctor(doctorId: number): Promise<Slot[]> {
-    return Array.from(this.slots.values()).filter(slot => slot.doctorId === doctorId);
+    return await db.select().from(slots).where(eq(slots.doctorId, doctorId));
   }
 
   async getAvailableSlots(doctorId: number): Promise<Slot[]> {
-    return Array.from(this.slots.values()).filter(slot => 
-      slot.doctorId === doctorId && slot.isAvailable
-    );
+    return await db
+      .select()
+      .from(slots)
+      .where(and(eq(slots.doctorId, doctorId), eq(slots.isAvailable, true)));
   }
 
   async createSlot(insertSlot: InsertSlot): Promise<Slot> {
-    const id = this.currentSlotId++;
-    const slot: Slot = {
-      ...insertSlot,
-      id,
-      isAvailable: insertSlot.isAvailable ?? true,
-      createdAt: new Date(),
-    };
-    this.slots.set(id, slot);
+    const [slot] = await db
+      .insert(slots)
+      .values(insertSlot)
+      .returning();
     return slot;
   }
 
   async updateSlotAvailability(slotId: number, isAvailable: boolean): Promise<Slot> {
-    const slot = this.slots.get(slotId);
+    const [slot] = await db
+      .update(slots)
+      .set({ isAvailable })
+      .where(eq(slots.id, slotId))
+      .returning();
     if (!slot) throw new Error("Slot not found");
-    
-    const updatedSlot = { ...slot, isAvailable };
-    this.slots.set(slotId, updatedSlot);
-    return updatedSlot;
+    return slot;
   }
 
   async getBooking(id: number): Promise<Booking | undefined> {
-    return this.bookings.get(id);
+    const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
+    return booking;
   }
 
   async getBookingsByPatient(patientId: number): Promise<Booking[]> {
-    return Array.from(this.bookings.values()).filter(booking => booking.patientId === patientId);
+    return await db.select().from(bookings).where(eq(bookings.patientId, patientId));
   }
 
   async getBookingsByDoctor(doctorId: number): Promise<Booking[]> {
-    return Array.from(this.bookings.values()).filter(booking => booking.doctorId === doctorId);
+    return await db.select().from(bookings).where(eq(bookings.doctorId, doctorId));
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    const id = this.currentBookingId++;
-    const booking: Booking = {
-      ...insertBooking,
-      id,
-      reasonForConsultation: insertBooking.reasonForConsultation ?? null,
-      patientPhone: insertBooking.patientPhone ?? null,
-      status: "pending",
-      paymentIntentId: null,
-      meetingUrl: null,
-      remindersSent: false,
-      symptomData: null,
-      symptomSummary: null,
-      createdAt: new Date(),
-    };
-    this.bookings.set(id, booking);
+    const [booking] = await db
+      .insert(bookings)
+      .values(insertBooking)
+      .returning();
     
     // Mark the slot as unavailable
     await this.updateSlotAvailability(insertBooking.slotId, false);
@@ -356,97 +338,94 @@ export class MemStorage implements IStorage {
   }
 
   async updateBookingPayment(bookingId: number, paymentIntentId: string): Promise<Booking> {
-    const booking = this.bookings.get(bookingId);
+    const [booking] = await db
+      .update(bookings)
+      .set({ paymentIntentId, status: "confirmed" })
+      .where(eq(bookings.id, bookingId))
+      .returning();
     if (!booking) throw new Error("Booking not found");
-    
-    const updatedBooking = { ...booking, paymentIntentId, status: "confirmed" };
-    this.bookings.set(bookingId, updatedBooking);
-    return updatedBooking;
+    return booking;
   }
 
   async updateBookingStatus(bookingId: number, status: string): Promise<Booking> {
-    const booking = this.bookings.get(bookingId);
+    const [booking] = await db
+      .update(bookings)
+      .set({ status })
+      .where(eq(bookings.id, bookingId))
+      .returning();
     if (!booking) throw new Error("Booking not found");
-    
-    const updatedBooking = { ...booking, status };
-    this.bookings.set(bookingId, updatedBooking);
-    return updatedBooking;
+    return booking;
   }
 
   // Doctor invite operations
   async createDoctorInvite(insertInvite: InsertDoctorInvite): Promise<DoctorInvite> {
-    const invite: DoctorInvite = {
-      id: this.currentInviteId++,
-      email: insertInvite.email,
-      token: insertInvite.token,
-      isUsed: false,
-      expiresAt: insertInvite.expiresAt,
-      createdAt: new Date(),
-    };
-    this.doctorInvites.set(invite.id, invite);
+    const [invite] = await db
+      .insert(doctorInvites)
+      .values(insertInvite)
+      .returning();
     return invite;
   }
 
   async getDoctorInviteByToken(token: string): Promise<DoctorInvite | undefined> {
-    const invites = Array.from(this.doctorInvites.values());
-    for (const invite of invites) {
-      if (invite.token === token && !invite.isUsed && invite.expiresAt > new Date()) {
-        return invite;
-      }
-    }
-    return undefined;
+    const [invite] = await db
+      .select()
+      .from(doctorInvites)
+      .where(
+        and(
+          eq(doctorInvites.token, token),
+          eq(doctorInvites.isUsed, false),
+          gte(doctorInvites.expiresAt, new Date())
+        )
+      );
+    return invite;
   }
 
   async markInviteAsUsed(inviteId: number): Promise<DoctorInvite> {
-    const invite = this.doctorInvites.get(inviteId);
+    const [invite] = await db
+      .update(doctorInvites)
+      .set({ isUsed: true })
+      .where(eq(doctorInvites.id, inviteId))
+      .returning();
     if (!invite) throw new Error("Invite not found");
-    
-    const updatedInvite = { ...invite, isUsed: true };
-    this.doctorInvites.set(inviteId, updatedInvite);
-    return updatedInvite;
+    return invite;
   }
 
   async cleanupExpiredInvites(): Promise<void> {
-    const now = new Date();
-    const entries = Array.from(this.doctorInvites.entries());
-    for (const [id, invite] of entries) {
-      if (invite.expiresAt < now) {
-        this.doctorInvites.delete(id);
-      }
-    }
+    await db
+      .delete(doctorInvites)
+      .where(sql`${doctorInvites.expiresAt} < now()`);
   }
 
   async markRemindersSent(bookingId: number): Promise<Booking> {
-    const booking = this.bookings.get(bookingId);
-    if (!booking) {
-      throw new Error(`Booking with id ${bookingId} not found`);
-    }
-    
-    const updatedBooking = { ...booking, remindersSent: true };
-    this.bookings.set(bookingId, updatedBooking);
-    return updatedBooking;
+    const [booking] = await db
+      .update(bookings)
+      .set({ remindersSent: true })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+    if (!booking) throw new Error(`Booking with id ${bookingId} not found`);
+    return booking;
   }
 
   async getBookingsNeedingReminders(): Promise<Booking[]> {
     const now = new Date();
-    const twentyThreeHours = 23 * 60 * 60 * 1000; // 23 hours in milliseconds
-    const twentyFiveHours = 25 * 60 * 60 * 1000; // 25 hours in milliseconds
+    const twentyThreeHours = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+    const twentyFiveHours = new Date(now.getTime() + 25 * 60 * 60 * 1000);
     
-    return Array.from(this.bookings.values()).filter(booking => {
-      if (booking.remindersSent || booking.status !== 'confirmed') {
-        return false;
-      }
-      
-      const appointmentTime = new Date(booking.appointmentDate);
-      const timeDiff = appointmentTime.getTime() - now.getTime();
-      
-      // Send reminders for bookings that are 24±1 hours away
-      return timeDiff >= twentyThreeHours && timeDiff <= twentyFiveHours;
-    });
+    return await db
+      .select()
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.remindersSent, false),
+          eq(bookings.status, 'confirmed'),
+          gte(bookings.appointmentDate, twentyThreeHours),
+          sql`${bookings.appointmentDate} <= ${twentyFiveHours}`
+        )
+      );
   }
 
   async rescheduleBooking(bookingId: number, newSlotId: number): Promise<Booking> {
-    const booking = this.bookings.get(bookingId);
+    const booking = await this.getBooking(bookingId);
     if (!booking) {
       throw new Error(`Booking with id ${bookingId} not found`);
     }
@@ -475,20 +454,23 @@ export class MemStorage implements IStorage {
 
     // Update booking with new slot details
     const newAppointmentDate = new Date(`${newSlot.date}T${newSlot.time}:00`);
-    const updatedBooking = {
-      ...booking,
-      slotId: newSlotId,
-      appointmentDate: newAppointmentDate,
-      appointmentTime: newSlot.time,
-      remindersSent: false, // Reset reminder status for new appointment time
-    };
+    
+    const [updatedBooking] = await db
+      .update(bookings)
+      .set({
+        slotId: newSlotId,
+        appointmentDate: newAppointmentDate,
+        appointmentTime: newSlot.time,
+        remindersSent: false, // Reset reminder status for new appointment time
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
 
-    this.bookings.set(bookingId, updatedBooking);
     return updatedBooking;
   }
 
   async cancelBooking(bookingId: number): Promise<Booking> {
-    const booking = this.bookings.get(bookingId);
+    const booking = await this.getBooking(bookingId);
     if (!booking) {
       throw new Error(`Booking with id ${bookingId} not found`);
     }
@@ -507,46 +489,45 @@ export class MemStorage implements IStorage {
     await this.updateSlotAvailability(booking.slotId, true);
 
     // Update booking status
-    const cancelledBooking = { ...booking, status: 'cancelled' };
-    this.bookings.set(bookingId, cancelledBooking);
+    const [cancelledBooking] = await db
+      .update(bookings)
+      .set({ status: 'cancelled' })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+      
     return cancelledBooking;
   }
 
   async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
-    const feedback: Feedback = {
-      id: this.currentFeedbackId++,
-      bookingId: insertFeedback.bookingId,
-      doctorId: insertFeedback.doctorId,
-      patientId: insertFeedback.patientId,
-      rating: insertFeedback.rating,
-      comment: insertFeedback.comment || null,
-      isAnonymous: insertFeedback.isAnonymous || null,
-      createdAt: new Date(),
-    };
-    
-    this.feedbacks.set(feedback.id, feedback);
+    const [feedback] = await db
+      .insert(feedbacks)
+      .values(insertFeedback)
+      .returning();
     return feedback;
   }
 
   async getFeedback(id: number): Promise<Feedback | undefined> {
-    return this.feedbacks.get(id);
+    const [feedback] = await db.select().from(feedbacks).where(eq(feedbacks.id, id));
+    return feedback;
   }
 
   async getFeedbackByBooking(bookingId: number): Promise<Feedback | undefined> {
-    return Array.from(this.feedbacks.values()).find(f => f.bookingId === bookingId);
+    const [feedback] = await db.select().from(feedbacks).where(eq(feedbacks.bookingId, bookingId));
+    return feedback;
   }
 
   async getFeedbacksByDoctor(doctorId: number): Promise<Feedback[]> {
-    return Array.from(this.feedbacks.values()).filter(f => f.doctorId === doctorId);
+    return await db.select().from(feedbacks).where(eq(feedbacks.doctorId, doctorId));
   }
 
   async updateBookingSymptoms(bookingId: number, symptomData: string, symptomSummary: string): Promise<Booking> {
-    const booking = this.bookings.get(bookingId);
+    const [booking] = await db
+      .update(bookings)
+      .set({ symptomData, symptomSummary })
+      .where(eq(bookings.id, bookingId))
+      .returning();
     if (!booking) throw new Error("Booking not found");
-    
-    const updatedBooking = { ...booking, symptomData, symptomSummary };
-    this.bookings.set(bookingId, updatedBooking);
-    return updatedBooking;
+    return booking;
   }
 
   async getDoctorAverageRating(doctorId: number): Promise<{ averageRating: number; totalFeedbacks: number }> {
@@ -563,12 +544,21 @@ export class MemStorage implements IStorage {
   }
 
   async storeIntakeAssessment(assessment: any): Promise<void> {
-    this.intakeAssessments.set(assessment.id, assessment);
+    // Store intake assessment in bookings table using intakeId field
+    await db
+      .update(bookings)
+      .set({ intakeId: assessment.id })
+      .where(eq(bookings.id, assessment.bookingId));
   }
 
   async getIntakeAssessment(id: number): Promise<any | undefined> {
-    return this.intakeAssessments.get(id);
+    // Retrieve intake assessment by intakeId from bookings
+    const [booking] = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.intakeId, id));
+    return booking ? { id, bookingId: booking.id } : undefined;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

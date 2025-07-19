@@ -1,10 +1,11 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import Stripe from "stripe";
 import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
+import jwt from "jsonwebtoken";
 import { storage } from "./storage";
 import { generateSymptomSummary, analyzeIntakeAssessment } from "./ai-service";
 import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema, insertFeedbackSchema } from "@shared/schema";
@@ -17,6 +18,25 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// JWT secret - in production, use a strong secret from environment variables
+const JWT_SECRET = process.env.JWT_SECRET || "your-development-secret-key";
+
+// Middleware to verify JWT token
+export function authenticateToken(req: Request & { user?: any }, res: any, next: any) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.sendStatus(401);
+  }
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
 
 // Recommendation engine function
 function getSpecialtyRecommendation(answers: any): string {
@@ -92,6 +112,86 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Authentication endpoints
+  
+  // Signup endpoint
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(validatedData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+      
+      // Create user
+      const user = await storage.createUser(validatedData);
+      
+      // Generate JWT token
+      const token = jwt.sign(
+        { id: user.id, email: user.email, isDoctor: user.isDoctor },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      
+      res.json({ token, user: { ...user, password: undefined } });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+  
+  // Login endpoint
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+      
+      // Verify user credentials
+      const user = await storage.verifyPassword(email, password);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Generate JWT token
+      const token = jwt.sign(
+        { id: user.id, email: user.email, isDoctor: user.isDoctor },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      
+      res.json({ token, user: { ...user, password: undefined } });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Get current user endpoint
+  app.get("/api/auth/me", authenticateToken, async (req: Request & { user?: any }, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // If user is a doctor, include their profile
+      let doctorProfile = null;
+      if (user.isDoctor) {
+        doctorProfile = await storage.getDoctorProfileByUserId(user.id);
+      }
+      
+      res.json({ 
+        user: { ...user, password: undefined },
+        doctorProfile 
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
   
   // Get all doctors
   app.get("/api/doctors", async (req, res) => {
