@@ -239,6 +239,11 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 12, 2025. Created loading screen with progress animation and seamless flow from assessment to specialist recommendations
 - July 12, 2025. Updated doctor database with 4 specialist types and enhanced doctor profiles to match recommendation categories
 - July 12, 2025. Added "Start 4-min Assessment" button to hero section connecting intake flow to booking system
+- July 19, 2025. Expanded specialist categories from 4 to 8 types (General Practice, Women's Health, Gynaecology, Fertility & Reproductive Health, Menopause & Hormone Health, Mental Health, Dermatology, Endocrinologist)
+- July 19, 2025. Implemented AI analysis of intake assessments using GPT-4o to generate clinical summaries with 3-4 bullet points for doctors
+- July 19, 2025. Updated recommendation engine to intelligently match patients to the 8 specialist categories based on symptoms, diagnoses, and medications
+- July 19, 2025. Added bulk operations to doctor slot selection: "Select All", "Clear All", "Copy First Day to All", and per-day "All/None" buttons
+- July 19, 2025. Created endpoints for doctors to access intake assessment data and AI-generated summaries linked to bookings
 
 ## User Preferences
 

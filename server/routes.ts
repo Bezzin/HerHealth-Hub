@@ -6,7 +6,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import { storage } from "./storage";
-import { generateSymptomSummary } from "./ai-service";
+import { generateSymptomSummary, analyzeIntakeAssessment } from "./ai-service";
 import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema, insertFeedbackSchema } from "@shared/schema";
 import { sendBookingConfirmation, sendRescheduleConfirmation, sendCancellationConfirmation, sendFeedbackRequest } from "./notifications";
 import { randomBytes } from "crypto";
@@ -22,19 +22,41 @@ function getSpecialtyRecommendation(answers: any): string {
   const reason = Array.isArray(answers.reason) ? answers.reason.join(' ').toLowerCase() : '';
   const diagnoses = Array.isArray(answers.diagnoses) ? answers.diagnoses.join(' ').toLowerCase() : '';
   const symptoms = Array.isArray(answers.symptoms) ? answers.symptoms.join(' ').toLowerCase() : '';
+  const medications = Array.isArray(answers.medications) ? answers.medications.join(' ').toLowerCase() : '';
 
-  // Priority order matching
-  if (reason.includes('menopause')) return 'Menopause Specialist';
-  if (reason.includes('perimenopause')) return 'Perimenopause Specialist';
-  if (/(fertility|conceive)/i.test(reason)) return 'Fertility Specialist';
-  if (reason.includes('pcos') || diagnoses.includes('pcos')) return 'Endocrine Gynaecologist';
-  if (reason.includes('experiencing symptoms') && (
-    diagnoses.includes('endometriosis') || 
-    symptoms.includes('pelvic') || 
-    symptoms.includes('pain')
-  )) return 'Endometriosis Specialist';
+  // Priority order matching for new categories
+  if (reason.includes('menopause') || reason.includes('perimenopause') || 
+      symptoms.includes('hot flushes') || symptoms.includes('night sweats') ||
+      medications.includes('hrt')) {
+    return 'Menopause & Hormone Health';
+  }
   
-  return 'Women\'s Health GP';
+  if (/(fertility|conceive|babies|ivf|egg freezing)/i.test(reason)) {
+    return 'Fertility & Reproductive Health';
+  }
+  
+  if (diagnoses.includes('endometriosis') || diagnoses.includes('fibroids') ||
+      diagnoses.includes('pcos') || diagnoses.includes('adenomyosis') ||
+      (symptoms.includes('pelvic') && symptoms.includes('pain')) ||
+      symptoms.includes('painful periods')) {
+    return 'Gynaecology';
+  }
+  
+  if (diagnoses.includes('pcos') && (symptoms.includes('acne') || 
+      symptoms.includes('hair loss'))) {
+    return 'Endocrinologist';
+  }
+  
+  if (symptoms.includes('acne') && !diagnoses.includes('pcos')) {
+    return 'Dermatology';
+  }
+  
+  if (symptoms.includes('low mood') || symptoms.includes('anxiety')) {
+    return 'Mental Health';
+  }
+  
+  // Default to Women's Health for general concerns
+  return 'Women\'s Health';
 }
 
 // Configure multer for file uploads
@@ -674,7 +696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Complete doctor onboarding
   app.post("/api/doctor/complete", async (req, res) => {
     try {
-      const { token, firstName, lastName, specialty, qualifications, experience, bio, slots } = req.body;
+      const { token, firstName, lastName, specialty, qualifications, experience, bio, slots, indemnityConfirmed } = req.body;
       
       // Validate invite token
       const invite = await storage.getDoctorInviteByToken(token);
@@ -697,6 +719,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         qualifications,
         experience,
         bio: bio || `Experienced ${specialty} specialist providing expert care.`,
+        profileImage: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=0891b2&color=fff&size=300`,
+        indemnityConfirmed: indemnityConfirmed || false,
       });
 
       // Create initial availability slots
@@ -941,6 +965,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get booking details with doctor and user info
+  app.get("/api/bookings/:id/details", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      // Get user info
+      const patient = await storage.getUser(booking.patientId);
+      
+      res.json({
+        id: booking.id,
+        patientName: patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown',
+        phone: booking.patientPhone,
+        reason: booking.reasonForConsultation,
+        appointmentDate: booking.appointmentDate,
+        appointmentTime: booking.appointmentTime,
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching booking details: " + error.message });
+    }
+  });
+
+  // Get intake assessment for a booking
+  app.get("/api/bookings/:id/intake", async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      // Try to find linked intake assessment
+      const intakeId = booking.intakeId || null;
+      let intakeData = null;
+      
+      if (intakeId) {
+        intakeData = await storage.getIntakeAssessment(intakeId);
+      }
+      
+      res.json({
+        hasIntake: !!intakeData,
+        intakeData: intakeData || null
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching intake data: " + error.message });
+    }
+  });
+
   // Intake assessment endpoint
   app.post("/api/intake", async (req, res) => {
     try {
@@ -956,11 +1033,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Determine specialty based on answers
       const specialty = getSpecialtyRecommendation(answers);
       
+      // Generate AI analysis
+      let aiAnalysis;
+      try {
+        aiAnalysis = await analyzeIntakeAssessment(answers);
+      } catch (error) {
+        console.error('AI analysis failed:', error);
+        aiAnalysis = {
+          summary: "Analysis pending - manual review required",
+          recommendation: "Conduct comprehensive assessment",
+          priority: "medium"
+        };
+      }
+      
+      // Store intake data with AI analysis
+      const intakeId = Date.now();
+      await storage.storeIntakeAssessment({
+        id: intakeId,
+        answers,
+        specialty,
+        aiSummary: aiAnalysis.summary,
+        recommendation: aiAnalysis.recommendation,
+        priority: aiAnalysis.priority,
+        timestamp: new Date()
+      });
+      
       // Return success response with specialty
       res.json({ 
         success: true, 
-        intakeId: Date.now(), // Simple ID for now
+        intakeId,
         specialty,
+        analysis: aiAnalysis,
         message: "Assessment completed successfully",
         timestamp: new Date().toISOString()
       });

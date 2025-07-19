@@ -36,11 +36,12 @@ type OnboardingFormData = z.infer<typeof onboardingSchema>;
 const specialties = [
   "General Practice",
   "Women's Health",
-  "Gynecology",
+  "Gynaecology",
   "Fertility & Reproductive Health",
   "Menopause & Hormone Health",
   "Mental Health",
   "Dermatology",
+  "Endocrinologist",
 ];
 
 const timeSlots = [
@@ -133,6 +134,7 @@ export default function Invite() {
         ...data,
         token,
         slots: selectedSlots,
+        indemnityConfirmed: data.indemnityConfirmed || false,
       });
 
       const result = await response.json();
@@ -406,10 +408,95 @@ export default function Invite() {
                       <h4 className="font-medium mb-3">Select your availability for the next 7 days</h4>
                       <p className="text-sm text-gray-600 mb-4">Click on time slots to toggle availability. You can modify this later.</p>
                       
+                      {/* Bulk actions */}
+                      <div className="flex gap-2 mb-4">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            const allSlots = dateOptions.flatMap(date => 
+                              timeSlots.map(time => ({ date: date.value, time }))
+                            );
+                            setSelectedSlots(allSlots);
+                            form.setValue("slots", allSlots);
+                          }}
+                        >
+                          Select All
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSlots([]);
+                            form.setValue("slots", []);
+                          }}
+                        >
+                          Clear All
+                        </Button>
+                        {selectedSlots.length > 0 && (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              // Get unique times from first day's selected slots
+                              const firstDaySlots = selectedSlots.filter(slot => 
+                                slot.date === dateOptions[0].value
+                              );
+                              if (firstDaySlots.length > 0) {
+                                const times = firstDaySlots.map(slot => slot.time);
+                                const newSlots = dateOptions.flatMap(date => 
+                                  times.map(time => ({ date: date.value, time }))
+                                );
+                                setSelectedSlots(newSlots);
+                                form.setValue("slots", newSlots);
+                              }
+                            }}
+                            disabled={!selectedSlots.some(slot => slot.date === dateOptions[0].value)}
+                          >
+                            Copy First Day to All
+                          </Button>
+                        )}
+                      </div>
+                      
                       <div className="space-y-3">
-                        {dateOptions.map((date) => (
+                        {dateOptions.map((date, dateIndex) => (
                           <div key={date.value} className="border rounded-lg p-3">
-                            <h5 className="font-medium text-sm mb-2">{date.label}</h5>
+                            <div className="flex justify-between items-center mb-2">
+                              <h5 className="font-medium text-sm">{date.label}</h5>
+                              <div className="flex gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 text-xs px-2"
+                                  onClick={() => {
+                                    const daySlots = timeSlots.map(time => ({ date: date.value, time }));
+                                    const otherSlots = selectedSlots.filter(slot => slot.date !== date.value);
+                                    const newSlots = [...otherSlots, ...daySlots];
+                                    setSelectedSlots(newSlots);
+                                    form.setValue("slots", newSlots);
+                                  }}
+                                >
+                                  All
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 text-xs px-2"
+                                  onClick={() => {
+                                    const newSlots = selectedSlots.filter(slot => slot.date !== date.value);
+                                    setSelectedSlots(newSlots);
+                                    form.setValue("slots", newSlots);
+                                  }}
+                                >
+                                  None
+                                </Button>
+                              </div>
+                            </div>
                             <div className="grid grid-cols-4 gap-2">
                               {timeSlots.map((time) => {
                                 const isSelected = selectedSlots.some(slot => 

@@ -47,6 +47,10 @@ export interface IStorage {
   getFeedbackByBooking(bookingId: number): Promise<Feedback | undefined>;
   getFeedbacksByDoctor(doctorId: number): Promise<Feedback[]>;
   getDoctorAverageRating(doctorId: number): Promise<{ averageRating: number; totalFeedbacks: number }>;
+
+  // Intake assessment operations
+  storeIntakeAssessment(assessment: any): Promise<void>;
+  getIntakeAssessment(id: number): Promise<any | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -56,6 +60,7 @@ export class MemStorage implements IStorage {
   private bookings: Map<number, Booking>;
   private doctorInvites: Map<number, DoctorInvite>;
   private feedbacks: Map<number, Feedback>;
+  private intakeAssessments: Map<number, any>;
   private currentUserId: number;
   private currentDoctorId: number;
   private currentSlotId: number;
@@ -70,6 +75,7 @@ export class MemStorage implements IStorage {
     this.bookings = new Map();
     this.doctorInvites = new Map();
     this.feedbacks = new Map();
+    this.intakeAssessments = new Map();
     this.currentUserId = 1;
     this.currentDoctorId = 1;
     this.currentSlotId = 1;
@@ -107,48 +113,48 @@ export class MemStorage implements IStorage {
     // Create doctor profiles
     const profile1 = await this.createDoctorProfile({
       userId: doctor1.id,
-      specialty: "Fertility Specialist",
+      specialty: "Fertility & Reproductive Health",
       qualifications: "MBBS, MRCOG, MSc Reproductive Medicine",
       experience: "10 years in fertility and reproductive endocrinology",
-      bio: "Dr. Emma Repro specializes in fertility treatments, IVF, and reproductive health for women planning families.",
+      bio: "Dr. Sarah Johnson specializes in fertility treatments, IVF, and reproductive health for women planning families.",
       profileImage: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
       indemnityConfirmed: true,
     });
 
     const profile2 = await this.createDoctorProfile({
       userId: doctor2.id,
-      specialty: "Menopause Specialist",
+      specialty: "Menopause & Hormone Health",
       qualifications: "MBBS, FRCOG, Diploma in Menopause Care",
       experience: "15 years in menopause and hormone therapy",
-      bio: "Dr. Grace Meno is an expert in menopause management, hormone replacement therapy, and supporting women through life transitions.",
+      bio: "Dr. Emily Chen is an expert in menopause management, hormone replacement therapy, and supporting women through life transitions.",
       profileImage: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
       indemnityConfirmed: true,
     });
 
     const profile3 = await this.createDoctorProfile({
       userId: doctor3.id,
-      specialty: "Endometriosis Specialist",
+      specialty: "Gynaecology",
       qualifications: "MBBS, FRCOG, Advanced Laparoscopic Surgery",
       experience: "12 years specializing in endometriosis and pelvic pain",
-      bio: "Dr. Sarah Endo focuses on endometriosis diagnosis, treatment, and surgical management for complex cases.",
+      bio: "Dr. Rebecca Martinez focuses on gynaecological conditions including endometriosis diagnosis, treatment, and surgical management.",
       profileImage: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
       indemnityConfirmed: true,
     });
 
     // Add fourth doctor
     const doctor4 = await this.createUser({
-      email: "olivia.gp@herhealth.com",
+      email: "olivia.wilson@herhealth.com",
       firstName: "Olivia",
-      lastName: "GP",
+      lastName: "Wilson",
       isDoctor: true,
     });
 
     const profile4 = await this.createDoctorProfile({
       userId: doctor4.id,
-      specialty: "Women's Health GP",
+      specialty: "Women's Health",
       qualifications: "MBBS, MRCGP, Diploma Women's Health",
       experience: "8 years in comprehensive women's healthcare",
-      bio: "Dr. Olivia GP provides holistic women's health care, from routine check-ups to complex health concerns.",
+      bio: "Dr. Olivia Wilson provides holistic women's health care, from routine check-ups to complex health concerns.",
       profileImage: "https://images.unsplash.com/photo-1594824720379-e0aaf9cd4659?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
       indemnityConfirmed: true,
     });
@@ -548,6 +554,14 @@ export class MemStorage implements IStorage {
     const averageRating = Math.round((totalRating / doctorFeedbacks.length) * 10) / 10; // Round to 1 decimal
 
     return { averageRating, totalFeedbacks: doctorFeedbacks.length };
+  }
+
+  async storeIntakeAssessment(assessment: any): Promise<void> {
+    this.intakeAssessments.set(assessment.id, assessment);
+  }
+
+  async getIntakeAssessment(id: number): Promise<any | undefined> {
+    return this.intakeAssessments.get(id);
   }
 }
 

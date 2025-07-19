@@ -7,8 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, Clock, Users, PoundSterling, Settings, Home, Plus, CheckCircle, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar, Clock, Users, PoundSterling, Settings, Home, Plus, CheckCircle, AlertCircle, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import SymptomSummary from "@/components/symptom-summary";
+import IntakeSummary from "@/components/intake-summary";
 
 interface DoctorStats {
   totalBookings: number;
@@ -37,6 +40,7 @@ export default function DoctorDashboard() {
   const search = useSearch();
   const { toast } = useToast();
   const [doctorId] = useState(4); // In real app, get from auth context
+  const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
   // WebSocket connection for real-time notifications
@@ -367,7 +371,11 @@ export default function DoctorDashboard() {
                             <Calendar className="w-4 h-4 mr-2" />
                             Join Meeting
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setSelectedBookingId(booking.id)}
+                          >
                             View Details
                           </Button>
                         </div>
@@ -507,6 +515,86 @@ export default function DoctorDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Booking Details Modal */}
+        <Dialog open={!!selectedBookingId} onOpenChange={(open) => !open && setSelectedBookingId(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Booking Details</DialogTitle>
+              <DialogDescription>
+                Complete information about this consultation
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedBookingId && (
+              <div className="space-y-6 mt-4">
+                {/* Booking Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Patient Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <BookingDetails bookingId={selectedBookingId} />
+                  </CardContent>
+                </Card>
+                
+                {/* Intake Summary */}
+                <IntakeSummary bookingId={selectedBookingId} />
+                
+                {/* Symptom Summary */}
+                <SymptomSummary bookingId={selectedBookingId} />
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+}
+
+// Component to fetch and display booking details
+function BookingDetails({ bookingId }: { bookingId: number }) {
+  const { data: booking, isLoading } = useQuery({
+    queryKey: ['/api/bookings', bookingId, 'details'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/bookings/${bookingId}/details`);
+      return response.json();
+    },
+  });
+
+  if (isLoading) {
+    return <div className="animate-pulse h-20 bg-gray-100 rounded"></div>;
+  }
+
+  if (!booking) {
+    return <div>Unable to load booking details</div>;
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-sm text-gray-600">Patient Name</p>
+          <p className="font-medium">{booking.patientName}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600">Phone</p>
+          <p className="font-medium">{booking.phone || 'Not provided'}</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-sm text-gray-600">Date</p>
+          <p className="font-medium">{new Date(booking.appointmentDate).toLocaleDateString()}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600">Time</p>
+          <p className="font-medium">{booking.appointmentTime}</p>
+        </div>
+      </div>
+      <div>
+        <p className="text-sm text-gray-600">Reason for Consultation</p>
+        <p className="font-medium">{booking.reason || 'Not specified'}</p>
       </div>
     </div>
   );
