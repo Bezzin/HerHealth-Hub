@@ -161,7 +161,13 @@ export class MemStorage implements IStorage {
 
     // Create slots for next 7 days for each doctor
     const today = new Date();
-    const times = ["09:00", "10:30", "14:00", "15:30"];
+    // Generate time slots every 15 minutes from 6 AM to 10 PM
+    const times = [];
+    for (let hour = 6; hour <= 22; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        times.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+      }
+    }
     
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);

@@ -251,6 +251,11 @@ HerHealth Hub is a healthcare booking platform that lets UK women (18-55) get a 
 - July 19, 2025. Created comprehensive intake assessment summary component for doctors to review patient health data
 - July 19, 2025. Added verification badges to doctor profiles showing GMC registration and experience levels
 - July 19, 2025. Implemented patient testimonials section with real stories to build trust and social proof
+- July 19, 2025. Fixed doctor invite email sending by implementing Resend integration with API key configuration
+- July 19, 2025. Enhanced mobile navigation with functional hamburger menu and responsive design
+- July 19, 2025. Implemented role-based navigation showing/hiding menu items based on user type (patient, doctor, admin)
+- July 19, 2025. Expanded doctor availability slots from 4 per day to 65 slots (every 15 minutes from 6AM to 10PM)
+- July 19, 2025. Added bulk slot selection features with improved UI grid layout and scrollable time slot selector
 
 ## User Preferences
 
