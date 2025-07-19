@@ -1,117 +1,254 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Activity, 
+  Heart, 
+  Brain, 
+  Pill, 
+  Calendar,
+  FileText,
+  AlertCircle,
+  Clock,
+  User
+} from "lucide-react";
 
-interface IntakeSummaryProps {
-  bookingId: number;
+interface IntakeData {
+  answers: Record<string, any>;
+  analysis?: string;
+  recommendedSpecialty?: string;
+  completedAt?: string;
 }
 
-export default function IntakeSummary({ bookingId }: IntakeSummaryProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+interface IntakeSummaryProps {
+  intakeData: IntakeData | null;
+  patientName?: string;
+}
 
-  const { data: intakeData, isLoading } = useQuery({
-    queryKey: ['/api/bookings', bookingId, 'intake'],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/bookings/${bookingId}/intake`);
-      return response.json();
-    },
-  });
-
-  if (isLoading) {
+export default function IntakeSummary({ intakeData, patientName }: IntakeSummaryProps) {
+  if (!intakeData) {
     return (
-      <Card className="border-purple-200">
-        <CardContent className="pt-6">
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full"></div>
-            <span className="text-sm text-gray-600">Loading intake assessment...</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8 text-gray-500">
+        <FileText className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+        <p>No intake assessment data available</p>
+      </div>
     );
   }
 
-  if (!intakeData?.hasIntake) {
-    return null;
-  }
+  const { answers, analysis, recommendedSpecialty, completedAt } = intakeData;
 
-  const intake = intakeData.intakeData;
-  const getPriorityColor = (priority: string) => {
-    if (priority === 'high') return 'bg-red-100 text-red-800';
-    if (priority === 'medium') return 'bg-yellow-100 text-yellow-800';
-    return 'bg-green-100 text-green-800';
-  };
+  // Extract key information from answers
+  const symptoms = answers.symptoms || [];
+  const diagnoses = answers.diagnoses || [];
+  const medications = answers.medications || [];
+  const allergies = answers.allergies || [];
+  const surgeries = answers.surgeries || [];
+  const familyHistory = answers.familyHistory || [];
 
   return (
-    <Card className="border-purple-200">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <ClipboardList className="w-5 h-5 text-purple-600" />
-          Pre-Assessment Summary
-        </CardTitle>
-        <CardDescription>
-          AI-generated analysis from patient intake form
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* AI Summary */}
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-purple-900">Clinical Summary</h4>
-            <Badge className={getPriorityColor(intake.priority)}>
-              {intake.priority.charAt(0).toUpperCase() + intake.priority.slice(1)} Priority
-            </Badge>
-          </div>
-          <div className="text-sm text-purple-800 whitespace-pre-line">
-            {intake.aiSummary}
-          </div>
-        </div>
-
-        {/* Recommendation */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Consultation Focus
-          </h4>
-          <p className="text-sm text-blue-800">{intake.recommendation}</p>
-        </div>
-
-        {/* Collapsible Raw Data */}
-        <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-full justify-between">
-              <span>View Full Assessment Responses</span>
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl">Intake Assessment Summary</CardTitle>
+            <CardDescription>
+              {patientName && <span className="font-medium">{patientName} • </span>}
+              {completedAt && (
+                <span>Completed {new Date(completedAt).toLocaleDateString()}</span>
               )}
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-3 pt-4">
-            <div className="text-sm space-y-2 bg-gray-50 p-3 rounded-md">
-              {intake.answers && Object.entries(intake.answers).map(([key, value]) => {
-                if (!value || (Array.isArray(value) && value.length === 0)) return null;
-                
-                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
-                
-                return (
-                  <div key={key} className="flex flex-col">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      {label}
-                    </span>
-                    <span className="text-gray-700">{displayValue}</span>
-                  </div>
-                );
-              })}
+            </CardDescription>
+          </div>
+          {recommendedSpecialty && (
+            <Badge variant="secondary" className="ml-4">
+              {recommendedSpecialty}
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* AI Analysis Summary */}
+        {analysis && (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900">
+            <div className="flex items-center gap-2 mb-2">
+              <Brain className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <h4 className="font-semibold text-blue-900 dark:text-blue-100">AI Clinical Summary</h4>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+            <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+              {analysis.split('\n').map((line, idx) => (
+                <p key={idx}>{line}</p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <Tabs defaultValue="symptoms" className="w-full">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="symptoms" className="text-xs">Symptoms</TabsTrigger>
+            <TabsTrigger value="medical" className="text-xs">Medical History</TabsTrigger>
+            <TabsTrigger value="medications" className="text-xs">Medications</TabsTrigger>
+            <TabsTrigger value="lifestyle" className="text-xs">Lifestyle</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="symptoms" className="mt-4 space-y-4">
+            <div>
+              <h4 className="font-medium flex items-center gap-2 mb-2">
+                <Activity className="w-4 h-4 text-gray-600" />
+                Current Symptoms
+              </h4>
+              {symptoms.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {symptoms.map((symptom: string, idx: number) => (
+                    <Badge key={idx} variant="outline">
+                      {symptom}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No symptoms reported</p>
+              )}
+            </div>
+
+            {answers.symptomDuration && (
+              <div>
+                <h4 className="font-medium flex items-center gap-2 mb-2">
+                  <Clock className="w-4 h-4 text-gray-600" />
+                  Duration
+                </h4>
+                <p className="text-sm">{answers.symptomDuration}</p>
+              </div>
+            )}
+
+            {answers.symptomTriggers && (
+              <div>
+                <h4 className="font-medium flex items-center gap-2 mb-2">
+                  <AlertCircle className="w-4 h-4 text-gray-600" />
+                  Triggers
+                </h4>
+                <p className="text-sm">{answers.symptomTriggers}</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="medical" className="mt-4 space-y-4">
+            <div>
+              <h4 className="font-medium flex items-center gap-2 mb-2">
+                <Heart className="w-4 h-4 text-gray-600" />
+                Existing Diagnoses
+              </h4>
+              {diagnoses.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {diagnoses.map((diagnosis: string, idx: number) => (
+                    <Badge key={idx} variant="secondary">
+                      {diagnosis}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No existing diagnoses</p>
+              )}
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2">Surgical History</h4>
+              {surgeries.length > 0 ? (
+                <ul className="text-sm space-y-1">
+                  {surgeries.map((surgery: string, idx: number) => (
+                    <li key={idx}>• {surgery}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No surgical history</p>
+              )}
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2">Family History</h4>
+              {familyHistory.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {familyHistory.map((condition: string, idx: number) => (
+                    <Badge key={idx} variant="outline" className="text-xs">
+                      {condition}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No relevant family history</p>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="medications" className="mt-4 space-y-4">
+            <div>
+              <h4 className="font-medium flex items-center gap-2 mb-2">
+                <Pill className="w-4 h-4 text-gray-600" />
+                Current Medications
+              </h4>
+              {medications.length > 0 ? (
+                <div className="space-y-2">
+                  {medications.map((med: string, idx: number) => (
+                    <div key={idx} className="p-2 bg-gray-50 dark:bg-gray-900 rounded">
+                      <p className="text-sm font-medium">{med}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No current medications</p>
+              )}
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2">Allergies</h4>
+              {allergies.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {allergies.map((allergy: string, idx: number) => (
+                    <Badge key={idx} variant="destructive" className="text-xs">
+                      {allergy}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No known allergies</p>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="lifestyle" className="mt-4 space-y-4">
+            {answers.smokingStatus && (
+              <div>
+                <h4 className="font-medium mb-1">Smoking Status</h4>
+                <p className="text-sm">{answers.smokingStatus}</p>
+              </div>
+            )}
+
+            {answers.alcoholConsumption && (
+              <div>
+                <h4 className="font-medium mb-1">Alcohol Consumption</h4>
+                <p className="text-sm">{answers.alcoholConsumption}</p>
+              </div>
+            )}
+
+            {answers.exerciseFrequency && (
+              <div>
+                <h4 className="font-medium mb-1">Exercise Frequency</h4>
+                <p className="text-sm">{answers.exerciseFrequency}</p>
+              </div>
+            )}
+
+            {answers.stressLevel && (
+              <div>
+                <h4 className="font-medium mb-1">Stress Level</h4>
+                <p className="text-sm">{answers.stressLevel}</p>
+              </div>
+            )}
+
+            {answers.sleepQuality && (
+              <div>
+                <h4 className="font-medium mb-1">Sleep Quality</h4>
+                <p className="text-sm">{answers.sleepQuality}</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

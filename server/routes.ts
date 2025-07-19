@@ -10,6 +10,7 @@ import { generateSymptomSummary, analyzeIntakeAssessment } from "./ai-service";
 import { insertUserSchema, insertBookingSchema, insertDoctorInviteSchema, insertDoctorProfileSchema, insertSlotSchema, insertFeedbackSchema } from "@shared/schema";
 import { sendBookingConfirmation, sendRescheduleConfirmation, sendCancellationConfirmation, sendFeedbackRequest } from "./notifications";
 import { randomBytes } from "crypto";
+import { setupLinkedInAuth } from "./linkedin-auth";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -1093,6 +1094,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching doctors: " + error.message });
     }
   });
+
+  // Setup LinkedIn authentication routes
+  setupLinkedInAuth(app);
 
   // Attach notification function to app for use in routes
   (app as any).notifyDoctorOfNewBooking = notifyDoctorOfNewBooking;

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle, UserPlus, Shield } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import LinkedInImport from "@/components/linkedin-import";
 
 const onboardingSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -346,6 +347,33 @@ export default function Invite() {
 
                 {step === 2 && (
                   <div className="space-y-4">
+                    {/* LinkedIn Import Option */}
+                    <div className="mb-6">
+                      <LinkedInImport 
+                        onImportComplete={(data) => {
+                          form.setValue("firstName", data.firstName);
+                          form.setValue("lastName", data.lastName);
+                          form.setValue("qualifications", data.qualifications);
+                          form.setValue("experience", data.experience);
+                          form.setValue("bio", data.bio);
+                          toast({
+                            title: "Profile Imported",
+                            description: "Your LinkedIn information has been imported successfully",
+                          });
+                        }}
+                      />
+                      <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-background px-2 text-muted-foreground">
+                            Or enter manually
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
                     <FormField
                       control={form.control}
                       name="qualifications"

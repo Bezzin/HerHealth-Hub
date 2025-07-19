@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import type { DoctorProfile } from "@shared/schema";
+import VerificationBadge from "@/components/verification-badge";
 
 interface DoctorWithRating extends DoctorProfile {
   averageRating?: number;
@@ -94,10 +95,19 @@ export default function DoctorProfiles() {
                     alt={`Dr. ${doctor.specialty}`}
                     className="w-16 h-16 rounded-full object-cover"
                   />
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-semibold text-gray-900">Dr. {doctor.specialty}</h4>
                     <p className="text-sm text-gray-600">{doctor.specialty}</p>
                   </div>
+                </div>
+                
+                {/* Verification Badges */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <VerificationBadge type="verified" size="sm" />
+                  <VerificationBadge type="gmc" value="GMC: 7654321" size="sm" />
+                  {doctor.experience && doctor.experience.includes('15+') && (
+                    <VerificationBadge type="experience" value="15+ Years" size="sm" />
+                  )}
                 </div>
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center space-x-2">

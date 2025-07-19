@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Calendar, Clock, Users, PoundSterling, Settings, Home, Plus, CheckCircle, AlertCircle, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SymptomSummary from "@/components/symptom-summary";
-import IntakeSummary from "@/components/intake-summary";
+import IntakeAssessmentSummary from "@/components/intake-assessment-summary";
 
 interface DoctorStats {
   totalBookings: number;
@@ -539,7 +539,7 @@ export default function DoctorDashboard() {
                 </Card>
                 
                 {/* Intake Summary */}
-                <IntakeSummary bookingId={selectedBookingId} />
+                <IntakeAssessmentSummary bookingId={selectedBookingId} />
                 
                 {/* Symptom Summary */}
                 <SymptomSummary bookingId={selectedBookingId} />
