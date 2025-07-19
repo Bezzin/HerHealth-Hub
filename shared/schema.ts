@@ -53,7 +53,7 @@ export const bookings = pgTable("bookings", {
   remindersSent: boolean("reminders_sent").default(false),
   symptomData: text("symptom_data"), // JSON string of questionnaire answers
   symptomSummary: text("symptom_summary"), // AI-generated clinical summary
-  intakeId: integer("intake_id"), // Reference to intake assessment
+  intakeId: text("intake_id"), // Reference to intake assessment - using text to handle large timestamps
   createdAt: timestamp("created_at").defaultNow(),
 });
 

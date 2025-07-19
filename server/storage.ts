@@ -547,11 +547,11 @@ export class DatabaseStorage implements IStorage {
     // Store intake assessment in bookings table using intakeId field
     await db
       .update(bookings)
-      .set({ intakeId: assessment.id })
+      .set({ intakeId: assessment.id.toString() })
       .where(eq(bookings.id, assessment.bookingId));
   }
 
-  async getIntakeAssessment(id: number): Promise<any | undefined> {
+  async getIntakeAssessment(id: string): Promise<any | undefined> {
     // Retrieve intake assessment by intakeId from bookings
     const [booking] = await db
       .select()
