@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
+import PhoneNumberManager from "@/components/phone-number-manager";
 
 export default function Profile() {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -304,6 +305,19 @@ export default function Profile() {
                   </p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Phone Number & SMS Preferences */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Communication Preferences</CardTitle>
+              <CardDescription>
+                Manage how we send you appointment reminders
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PhoneNumberManager userId={userId} />
             </CardContent>
           </Card>
         </div>

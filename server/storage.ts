@@ -55,6 +55,9 @@ export interface IStorage {
   // Intake assessment operations
   storeIntakeAssessment(assessment: any): Promise<void>;
   getIntakeAssessment(id: number): Promise<any | undefined>;
+
+    //User phone operations
+  updateUserPhone(userId: number, phoneNumber: string): Promise<User | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -153,12 +156,12 @@ export class DatabaseStorage implements IStorage {
         times.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
       }
     }
-    
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
-      
+
       // Create 4 slots per day for each doctor
       for (const time of times) {
         await this.createSlot({
@@ -167,21 +170,21 @@ export class DatabaseStorage implements IStorage {
           time,
           isAvailable: true,
         });
-        
+
         await this.createSlot({
           doctorId: profile2.id,
           date: dateStr,
           time,
           isAvailable: true,
         });
-        
+
         await this.createSlot({
           doctorId: profile3.id,
           date: dateStr,
           time,
           isAvailable: true,
         });
-        
+
         await this.createSlot({
           doctorId: profile4.id,
           date: dateStr,
@@ -205,7 +208,7 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     // Hash password if provided
     const hashedPassword = await bcrypt.hash(insertUser.password, 10);
-    
+
     const [user] = await db
       .insert(users)
       .values({
@@ -244,6 +247,16 @@ export class DatabaseStorage implements IStorage {
       .returning();
     if (!user) throw new Error("User not found");
     return user;
+  }
+
+  async updateUserPhone(userId: number, phoneNumber: string): Promise<User | null> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ phoneNumber })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return updatedUser || null;
   }
 
   async getDoctorProfile(id: number): Promise<DoctorProfile | undefined> {
@@ -330,10 +343,10 @@ export class DatabaseStorage implements IStorage {
       .insert(bookings)
       .values(insertBooking)
       .returning();
-    
+
     // Mark the slot as unavailable
     await this.updateSlotAvailability(insertBooking.slotId, false);
-    
+
     return booking;
   }
 
@@ -410,7 +423,7 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const twentyThreeHours = new Date(now.getTime() + 23 * 60 * 60 * 1000);
     const twentyFiveHours = new Date(now.getTime() + 25 * 60 * 60 * 1000);
-    
+
     return await db
       .select()
       .from(bookings)
@@ -454,7 +467,7 @@ export class DatabaseStorage implements IStorage {
 
     // Update booking with new slot details
     const newAppointmentDate = new Date(`${newSlot.date}T${newSlot.time}:00`);
-    
+
     const [updatedBooking] = await db
       .update(bookings)
       .set({
@@ -494,7 +507,7 @@ export class DatabaseStorage implements IStorage {
       .set({ status: 'cancelled' })
       .where(eq(bookings.id, bookingId))
       .returning();
-      
+
     return cancelledBooking;
   }
 
@@ -532,7 +545,7 @@ export class DatabaseStorage implements IStorage {
 
   async getDoctorAverageRating(doctorId: number): Promise<{ averageRating: number; totalFeedbacks: number }> {
     const doctorFeedbacks = await this.getFeedbacksByDoctor(doctorId);
-    
+
     if (doctorFeedbacks.length === 0) {
       return { averageRating: 0, totalFeedbacks: 0 };
     }

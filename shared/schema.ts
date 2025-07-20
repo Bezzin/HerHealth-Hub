@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   isDoctor: boolean("is_doctor").default(false),
   stripeCustomerId: text("stripe_customer_id"),
   medicalHistoryUrl: text("medical_history_url"),
+  phoneNumber: text("phone_number"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -1196,6 +1196,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's phone number
+  app.get("/api/users/:id/phone", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({
+        phoneNumber: user.phoneNumber || null,
+        hasPhone: !!user.phoneNumber
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error fetching phone number: " + error.message });
+    }
+  });
+
+  // Update user's phone number
+  app.put("/api/users/:id/phone", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { phoneNumber } = req.body;
+      
+      if (!phoneNumber) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+      
+      // Basic phone number validation
+      const cleanedPhone = phoneNumber.replace(/\D/g, '');
+      if (cleanedPhone.length < 10 || cleanedPhone.length > 15) {
+        return res.status(400).json({ message: "Invalid phone number format" });
+      }
+      
+      const updatedUser = await storage.updateUserPhone(userId, phoneNumber);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({
+        message: "Phone number updated successfully",
+        phoneNumber: updatedUser.phoneNumber
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error updating phone number: " + error.message });
+    }
+  });
+
   // Setup LinkedIn authentication routes
   setupLinkedInAuth(app);
 
