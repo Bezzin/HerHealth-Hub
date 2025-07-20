@@ -159,7 +159,7 @@ export default function Questionnaire() {
     });
   };
 
-  const progressPercentage = ((currentQuestion + 1) / questions.length) * 100;
+  const progressPercentage = (currentQuestion / questions.length) * 100;
 
   if (isSubmitted) {
     return (
