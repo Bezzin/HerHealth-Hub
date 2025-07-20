@@ -289,7 +289,7 @@ export default function IntakeWizard() {
   }
 
   const stepQuestions = getCurrentStepQuestions();
-  const progress = (currentStep / totalSteps) * 100;
+  const progress = ((currentStep - 1) / totalSteps) * 100;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
