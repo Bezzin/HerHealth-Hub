@@ -84,6 +84,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   isDoctor: true,
+  phoneNumber: true,
 });
 
 export const insertDoctorProfileSchema = createInsertSchema(doctorProfiles).pick({

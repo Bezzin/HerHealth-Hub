@@ -22,6 +22,7 @@ const signupSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  phoneNumber: z.string().optional(),
 });
 
 export default function Signup() {
@@ -35,6 +36,7 @@ export default function Signup() {
       password: "",
       firstName: "",
       lastName: "",
+      phoneNumber: "",
     },
   });
 
@@ -144,6 +146,26 @@ export default function Signup() {
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="tel"
+                        placeholder="+44 7123 456789"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-gray-600">
+                      For SMS appointment reminders
+                    </p>
                   </FormItem>
                 )}
               />
