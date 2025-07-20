@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Profile() {
@@ -13,8 +14,9 @@ export default function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, isLoading: isAuthLoading } = useAuth();
   
-  const userId = 4; // In real app, get from auth context
+  const userId = user?.id || 4; // Fallback to 4 if no user
 
   // Get user's medical history
   const { data: medicalHistory, isLoading } = useQuery({
@@ -140,7 +142,7 @@ export default function Profile() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  if (isLoading) {
+  if (isLoading || isAuthLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -289,13 +291,17 @@ export default function Profile() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Full Name
                   </label>
-                  <p className="text-gray-900">Patient User</p>
+                  <p className="text-gray-900">
+                    {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email
                   </label>
-                  <p className="text-gray-900">patient@example.com</p>
+                  <p className="text-gray-900">
+                    {user?.email || 'Loading...'}
+                  </p>
                 </div>
               </div>
             </CardContent>
